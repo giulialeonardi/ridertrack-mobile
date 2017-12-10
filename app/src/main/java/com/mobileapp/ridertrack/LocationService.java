@@ -1,6 +1,6 @@
 package com.mobileapp.ridertrack;
 
-import android.app.IntentService;
+
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -8,12 +8,11 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.os.ResultReceiver;
-import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
-import java.sql.Time;
+import java.util.Date;
+
 
 public class LocationService extends Service
 {
@@ -42,6 +41,7 @@ public class LocationService extends Service
             intent.putExtra(Constants.INTENT_EXTRA, mLastLocation);
             LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getApplicationContext());
             lbm.sendBroadcast(intent);
+
         }
 
         @Override
@@ -100,7 +100,7 @@ public class LocationService extends Service
         } catch (java.lang.SecurityException ex) {
             Log.i(TAG, "fail to request location update, ignore", ex);
         } catch (IllegalArgumentException ex) {
-            Log.d(TAG, "network provider does not exist, " + ex.getMessage());
+            Log.d(TAG, "network provider does not exist " + ex.getMessage());
         }
         try {
             mLocationManager.requestLocationUpdates(
@@ -111,6 +111,8 @@ public class LocationService extends Service
         } catch (IllegalArgumentException ex) {
             Log.d(TAG, "gps provider does not exist " + ex.getMessage());
         }
+
+
     }
 
     @Override
