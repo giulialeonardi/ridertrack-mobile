@@ -1,0 +1,33 @@
+<resources>
+    <string name="app_name">Ridertrack</string>
+
+    <!-- Strings related to login -->
+    <string name="prompt_email">Email</string>
+    <string name="prompt_password">Password</string>
+    <string name="action_sign_in">Sign in</string>
+    <string name="email_action_sign_in">Login</string>
+    <string name="facebook_action_sign_in">Login with Facebook</string>
+    <string name="google_action_sign_in">Login with Google</string>
+    <string name="action_sign_in_short">Sign in</string>
+    <string name="error_invalid_email">This email address is invalid</string>
+    <string name="error_invalid_password">This password is too short</string>
+    <string name="error_incorrect_password">This password is incorrect</string>
+    <string name="error_field_required">This field is required</string>
+    <string name="error_sign_in_first">UPS...couldn\'t sign in</string>
+    <string name="error_sign_in_second">Your email and password don\'t match.\n Please, try again.</string>
+    <string name="try_again">Try again</string>
+    <string name="share">Share status</string>
+    <string name="time">Time</string>
+    <string name="speed">Speed</string>
+    <string name="finish_line">Finish Line</string>
+    <string name="time_default">00:00:00:00</string>
+    <string name="speed_default">0,000</string>
+    <string name="finish_line_default"> 0</string>
+    <string name="speed_measure">" km/h"</string>
+    <string name="finish_line_measure">" km/h"</string>
+
+
+    <string name="permission_rationale">"Contacts permissions are needed for providing email
+        completions."
+    </string>
+</resources>
