@@ -25,6 +25,8 @@
     <string name="finish_line_default"> 0</string>
     <string name="speed_measure">" km/h"</string>
     <string name="finish_line_measure">" km/h"</string>
+    <string name="facebook_app_id">278876872621248</string>
+    <string name="fb_login_protocol_scheme">fb278876872621248</string>
 
 
     <string name="permission_rationale">"Contacts permissions are needed for providing email

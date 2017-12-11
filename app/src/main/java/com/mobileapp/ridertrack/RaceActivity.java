@@ -54,6 +54,7 @@ public class RaceActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        userId = "5a2e5b2e2e890e0004dde6de";
 
         //prevents the screen sleep
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -167,7 +168,7 @@ public class RaceActivity extends AppCompatActivity {
 
             try {
 
-                URL url = new URL("https://rider-track-dev.herokuapp.com/api/events/:eventId/participants/positions"); // here is your URL path
+                URL url = new URL("https://rider-track-dev.herokuapp.com/api/events/5a22f3e680a3010004ec34a6/participants/positions"); // here is your URL path
                 //TODO: get eventId
                 JSONObject postDataParams = new JSONObject();
                 postDataParams.put("userId", params[0]);
@@ -214,6 +215,7 @@ public class RaceActivity extends AppCompatActivity {
 
                 }
                 else {
+                    Log.e("false", String.valueOf(responseCode));
                     return new String("false : "+responseCode);
                 }
             }
