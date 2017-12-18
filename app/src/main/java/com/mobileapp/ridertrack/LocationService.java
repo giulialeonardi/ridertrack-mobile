@@ -6,12 +6,27 @@ import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
 import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+import android.widget.Toast;
 
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.util.Date;
+import java.util.Iterator;
+
+import javax.net.ssl.HttpsURLConnection;
 
 
 public class LocationService extends Service
@@ -24,6 +39,7 @@ public class LocationService extends Service
 
     private class LocationListener implements android.location.LocationListener {
         Location mLastLocation;
+        String  userId = "5a2e5b2e2e890e0004dde6de";
 
         public LocationListener(String provider)
         {
@@ -36,12 +52,17 @@ public class LocationService extends Service
         {
             Log.e(TAG, "onLocationChanged: " + location);
             mLastLocation.set(location);
+            //calculate timestamp
+            Long tsLong = System.currentTimeMillis()/1000;
+            String timeStamp = tsLong.toString();
+            //send to server
+            new SendPostRequest().execute(userId, String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude()), timeStamp);
+            //send to activity
             Intent intent = new Intent();
             intent.setAction(Constants.INTENT_ACTION);
             intent.putExtra(Constants.INTENT_EXTRA, mLastLocation);
             LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getApplicationContext());
             lbm.sendBroadcast(intent);
-
         }
 
         @Override
@@ -136,6 +157,102 @@ public class LocationService extends Service
         if (mLocationManager == null) {
             mLocationManager = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
         }
+    }
+
+    public class SendPostRequest extends AsyncTask<String, Void, String> {
+
+        protected void onPreExecute(){}
+
+        protected String doInBackground(String... params) {
+
+            try {
+                //TODO:change event id : 5a2f8b9f00e2030004da1dce
+                URL url = new URL("https://rider-track-dev.herokuapp.com/api/events/5a2f8b9f00e2030004da1dce/participants/positions"); // here is your URL path
+                //TODO: get eventId
+                JSONObject postDataParams = new JSONObject();
+                postDataParams.put("userId", params[0]);
+                postDataParams.put("lat", params[1]);
+                postDataParams.put("lng", params[2]);
+                postDataParams.put("timestamp", params[3]);
+                Log.e("params",postDataParams.toString());
+
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setReadTimeout(15000 /* milliseconds */);
+                conn.setConnectTimeout(15000 /* milliseconds */);
+                conn.setRequestMethod("POST");
+                conn.setDoInput(true);
+                conn.setDoOutput(true);
+
+                OutputStream os = conn.getOutputStream();
+                BufferedWriter writer = new BufferedWriter(
+                        new OutputStreamWriter(os, "UTF-8"));
+                writer.write(getPostDataString(postDataParams));
+
+                writer.flush();
+                writer.close();
+                os.close();
+
+                int responseCode=conn.getResponseCode();
+
+                if (responseCode == HttpsURLConnection.HTTP_OK) {
+
+                    BufferedReader in=new BufferedReader(new
+                            InputStreamReader(
+                            conn.getInputStream()));
+
+                    StringBuffer sb = new StringBuffer("");
+                    String line="";
+
+                    while((line = in.readLine()) != null) {
+
+                        sb.append(line);
+                        break;
+                    }
+
+                    in.close();
+                    return sb.toString();
+
+                }
+                else {
+                    Log.e("false", String.valueOf(responseCode));
+                    return new String("false : "+responseCode);
+                }
+            }
+            catch(Exception e){
+                return new String("Exception: " + e.getMessage());
+            }
+
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            Toast.makeText(getApplicationContext(), result,
+                    Toast.LENGTH_LONG).show();
+        }
+    }
+
+    public String getPostDataString(JSONObject params) throws Exception {
+
+        StringBuilder result = new StringBuilder();
+        boolean first = true;
+
+        Iterator<String> itr = params.keys();
+
+        while(itr.hasNext()){
+
+            String key= itr.next();
+            Object value = params.get(key);
+
+            if (first)
+                first = false;
+            else
+                result.append("&");
+
+            result.append(URLEncoder.encode(key, "UTF-8"));
+            result.append("=");
+            result.append(URLEncoder.encode(value.toString(), "UTF-8"));
+        }
+        return result.toString();
     }
 
 }

@@ -21,10 +21,10 @@
     <string name="speed">Speed</string>
     <string name="finish_line">Finish Line</string>
     <string name="time_default">00:00:00:00</string>
-    <string name="speed_default">0,000</string>
+    <string name="speed_default">0,00</string>
     <string name="finish_line_default"> 0</string>
     <string name="speed_measure">" km/h"</string>
-    <string name="finish_line_measure">" km/h"</string>
+    <string name="finish_line_measure">" km"</string>
     <string name="facebook_app_id">278876872621248</string>
     <string name="fb_login_protocol_scheme">fb278876872621248</string>
 
@@ -32,4 +32,5 @@
     <string name="permission_rationale">"Contacts permissions are needed for providing email
         completions."
     </string>
+    <string name="server_client_id">920489632849-hppab7p06cavsr9jqrnvi6coho1l1hj0.apps.googleusercontent.com</string>
 </resources>

@@ -14,11 +14,8 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 
-import com.facebook.CallbackManager;
-import com.facebook.FacebookCallback;
-import com.facebook.FacebookException;
-import com.facebook.FacebookSdk;
-import com.facebook.login.LoginResult;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+
 
 public class MainActivity extends AppCompatActivity  {
 
@@ -42,15 +39,22 @@ public class MainActivity extends AppCompatActivity  {
                 startActivity(emailLogin);
             }
         });
+        googleButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent googleAuth = new Intent(getApplicationContext(), GoogleAuth.class);
+                startActivity(googleAuth);
+            }
+        });
 
         //temporary:just to see error screen
-        googleButton.setOnClickListener(new View.OnClickListener() {
+        /*googleButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent emailLogin = new Intent(getApplicationContext(), ErrorActivity.class);
                 startActivity(emailLogin);
             }
-        });
+        });*/
         //temporary:just to see race screen
         facebookButton.setOnClickListener(new View.OnClickListener() {
             @Override

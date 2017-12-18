@@ -89,18 +89,13 @@ public class RaceActivity extends AppCompatActivity {
                 if (extras != null) {
                         location = (Location) extras.get(INTENT_EXTRA);
                         currentTime = SystemClock.elapsedRealtime();
-                        String lat = String.valueOf(location.getLatitude());
-                        String lng = String.valueOf(location.getLongitude());
-                        Long tsLong = System.currentTimeMillis()/1000;
-                        String timeStamp = tsLong.toString();
-                        new SendPostRequest().execute(userId, lat, lng, timeStamp);
                         Log.i("ACTIVITY", "Intent Extra key=" + INTENT_EXTRA + ":" + location);
                         locationArrayList.add(location);
                         Log.i("ACTIVITY", "Array size" + ":" + locationArrayList.size());
-
                         //calculates the speed only at the reception of at least two different inputs
                         if(locationArrayList.size() > 1){
                                 distance = locationArrayList.get(locationArrayList.size() - 2).distanceTo(locationArrayList.get(locationArrayList.size() - 1));
+                                Log.e("Distance", String.valueOf(distance));
                                 calculateSpeed(distance);
 
                     }
@@ -147,12 +142,11 @@ public class RaceActivity extends AppCompatActivity {
     }
 
     public void calculateSpeed(float distance){
-    currentTime = SystemClock.elapsedRealtime();
-    float timeDistance = currentTime - startingTime;
-    float speed = (distance*1000)/timeDistance;
-    Log.e("Speed: ", String.valueOf(speed));
-    this.speed.setText(String.valueOf(round(speed,3)));
-    startingTime = currentTime;
+        float timeDistance = currentTime - startingTime;
+        float speed = 3.6f * ((distance*1000)/timeDistance);
+        Log.e("Speed: ", String.valueOf(speed));
+        this.speed.setText(String.valueOf(round(speed,2)));
+        startingTime = currentTime;
     }
 
     public static BigDecimal round(float d, int decimalPlace) {
@@ -160,100 +154,7 @@ public class RaceActivity extends AppCompatActivity {
         bd = bd.setScale(decimalPlace, BigDecimal.ROUND_HALF_UP);
         return bd;
     }
-
-    public class SendPostRequest extends AsyncTask<String, Void, String> {
-
-        protected void onPreExecute(){}
-
-        protected String doInBackground(String... params) {
-
-            try {
-                //TODO:change event id
-                URL url = new URL("https://rider-track-dev.herokuapp.com/api/events/5a22f3e680a3010004ec34a6/participants/positions"); // here is your URL path
-                //TODO: get eventId
-                JSONObject postDataParams = new JSONObject();
-                postDataParams.put("userId", params[0]);
-                postDataParams.put("lat", params[1]);
-                postDataParams.put("lng", params[2]);
-                postDataParams.put("timestamp", params[3]);
-                Log.e("params",postDataParams.toString());
-
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setReadTimeout(15000 /* milliseconds */);
-                conn.setConnectTimeout(15000 /* milliseconds */);
-                conn.setRequestMethod("POST");
-                conn.setDoInput(true);
-                conn.setDoOutput(true);
-
-                OutputStream os = conn.getOutputStream();
-                BufferedWriter writer = new BufferedWriter(
-                        new OutputStreamWriter(os, "UTF-8"));
-                writer.write(getPostDataString(postDataParams));
-
-                writer.flush();
-                writer.close();
-                os.close();
-
-                int responseCode=conn.getResponseCode();
-
-                if (responseCode == HttpsURLConnection.HTTP_OK) {
-
-                    BufferedReader in=new BufferedReader(new
-                            InputStreamReader(
-                            conn.getInputStream()));
-
-                    StringBuffer sb = new StringBuffer("");
-                    String line="";
-
-                    while((line = in.readLine()) != null) {
-
-                        sb.append(line);
-                        break;
-                    }
-
-                    in.close();
-                    return sb.toString();
-
-                }
-                else {
-                    Log.e("false", String.valueOf(responseCode));
-                    return new String("false : "+responseCode);
-                }
-            }
-            catch(Exception e){
-                return new String("Exception: " + e.getMessage());
-            }
-
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-            Toast.makeText(getApplicationContext(), result,
-                    Toast.LENGTH_LONG).show();
-        }
-    }
-
-    public String getPostDataString(JSONObject params) throws Exception {
-
-        StringBuilder result = new StringBuilder();
-        boolean first = true;
-
-        Iterator<String> itr = params.keys();
-
-        while(itr.hasNext()){
-
-            String key= itr.next();
-            Object value = params.get(key);
-
-            if (first)
-                first = false;
-            else
-                result.append("&");
-
-            result.append(URLEncoder.encode(key, "UTF-8"));
-            result.append("=");
-            result.append(URLEncoder.encode(value.toString(), "UTF-8"));
-        }
-        return result.toString();
+    private void updateFinishLineDistance(float distance){
+        this.finishLine.setText(String.valueOf(round(distance,2)));
     }
 }
