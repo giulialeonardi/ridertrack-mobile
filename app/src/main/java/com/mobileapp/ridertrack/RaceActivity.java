@@ -7,6 +7,7 @@ import android.content.IntentFilter;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.PersistableBundle;
 import android.os.SystemClock;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
@@ -49,19 +50,24 @@ public class RaceActivity extends AppCompatActivity {
     private BroadcastReceiver receiver;
     private LocalBroadcastManager lbm;
     private String userId;
-    //TODO: get userId from login
+    private String token;
+    private String eventId;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //TODO:change here you userId
-        userId = "5a2e5b2e2e890e0004dde6de";
 
         //prevents the screen sleep
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         setContentView(R.layout.activity_race);
         locationArrayList = new ArrayList<>();
+
+       Intent intent = getIntent();
+       userId = intent.getStringExtra("userId");
+       token = intent.getStringExtra("token");
+       eventId = intent.getStringExtra("eventId");
 
         //time calculation
         time = findViewById(R.id.time);
@@ -102,8 +108,6 @@ public class RaceActivity extends AppCompatActivity {
                 }
             }
         };
-
-
         //distance to finish line calculation
         finishLine = findViewById(R.id.finish_line);
     }
@@ -128,7 +132,11 @@ public class RaceActivity extends AppCompatActivity {
 
     private void startLocationService()
     {
-        startService(new Intent(this, LocationService.class));
+        Intent startLocationService = new Intent(this, LocationService.class);
+        startLocationService.putExtra("userId", userId);
+        startLocationService.putExtra("token", token);
+        startLocationService.putExtra("eventId", eventId);
+        startService(startLocationService);
     }
 
 

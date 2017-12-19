@@ -20,6 +20,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -33,8 +34,21 @@ import android.widget.TextView;
 
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+
+import javax.net.ssl.HttpsURLConnection;
 
 import static android.Manifest.permission.READ_CONTACTS;
 
@@ -48,13 +62,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
      */
     private static final int REQUEST_READ_CONTACTS = 0;
 
-    /**
-     * A dummy authentication store containing known user names and passwords.
-     * TODO: remove after connecting to a real authentication system.
-     */
-    private static final String[] DUMMY_CREDENTIALS = new String[]{
-            "giulialeonardi13@gmail.com", "password"
-    };
     /**
      * Keep track of the login task to ensure we can cancel it if requested.
      */
@@ -189,9 +196,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
             showProgress(true);
-            mAuthTask = new UserLoginTask(email, password);
-            Intent startRace = new Intent(getApplicationContext(), RaceActivity.class);
-            startActivity(startRace);
+            new UserLoginTask().execute(email, password);
         }
     }
 
@@ -300,36 +305,81 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
      * Represents an asynchronous login task used to authenticate
      * the user.
      */
-    public class UserLoginTask extends AsyncTask<Void, Void, Boolean> {
-
-        private final String mEmail;
-        private final String mPassword;
-
-        UserLoginTask(String email, String password) {
-            mEmail = email;
-            mPassword = password;
-        }
+    public class UserLoginTask extends AsyncTask<String, Void, Boolean> {
 
         @Override
-        protected Boolean doInBackground(Void... params) {
+        protected Boolean doInBackground(String... params) {
             // TODO: attempt authentication against a network service.
-
             try {
-                // Simulate network access.
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
-                return false;
-            }
+                URL url = new URL("https://rider-track-dev.herokuapp.com/api/auth/login");
+                JSONObject postDataParams = new JSONObject();
+                postDataParams.put("email", params[0]);
+                postDataParams.put("password", params[1]);
+                Log.e("params",postDataParams.toString());
 
-            for (String credential : DUMMY_CREDENTIALS) {
-                String[] pieces = credential.split(":");
-                if (pieces[0].equals(mEmail)) {
-                    // Account exists, return true if the password matches.
-                    return pieces[1].equals(mPassword);
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setReadTimeout(15000 /* milliseconds */);
+                conn.setConnectTimeout(15000 /* milliseconds */);
+                conn.setRequestMethod("POST");
+                conn.setDoInput(true);
+                conn.setDoOutput(true);
+
+                OutputStream os = conn.getOutputStream();
+                BufferedWriter writer = new BufferedWriter(
+                        new OutputStreamWriter(os, "UTF-8"));
+                writer.write(getPostDataString(postDataParams));
+
+                writer.flush();
+                writer.close();
+                os.close();
+
+                int responseCode=conn.getResponseCode();
+
+                if (responseCode == HttpsURLConnection.HTTP_OK) {
+                    BufferedReader in=new BufferedReader(new
+                            InputStreamReader(
+                            conn.getInputStream()));
+
+                    StringBuffer sb = new StringBuffer("");
+                    String line="";
+
+                    while((line = in.readLine()) != null) {
+
+                        sb.append(line);
+                        break;
+                    }
+                    String CurrentString = sb.toString();
+                    String[] separated = CurrentString.split(",");
+                    ArrayList<String> fieldsList = new ArrayList<>();
+                    for(String string : separated){
+                        String[] fields = string.split(":");
+                        fieldsList.add(fields[1]);
+                    }
+                    String userId = fieldsList.get(0).replace("\"", "");
+                    String role = fieldsList.get(1).replace("\"", "");
+                    String token = fieldsList.get(2).replace("\"", "");
+                    String expiration = fieldsList.get(3).replace("\"", "").replace("}", "");
+
+                    in.close();
+                    Log.e("RESPONSE", sb.toString());
+                    Intent eventsList = new Intent(getApplicationContext(), EventsListActivity.class);
+                    eventsList.putExtra("userId", userId);
+                    eventsList.putExtra("token", token);
+                    startActivity(eventsList);
+                    return true;
+
+                }
+                else {
+                    Log.e("false", String.valueOf(responseCode));
+                    Intent error = new Intent(getApplicationContext(), ErrorActivity.class);
+                    startActivity(error);
+                    return false;
                 }
             }
-
-            return true;
+            catch(Exception e){
+                Log.e("Exception: ", e.getMessage());
+                return false;
+            }
         }
 
         @Override
@@ -350,6 +400,29 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             mAuthTask = null;
             showProgress(false);
         }
+    }
+    public String getPostDataString(JSONObject params) throws Exception {
+
+        StringBuilder result = new StringBuilder();
+        boolean first = true;
+
+        Iterator<String> itr = params.keys();
+
+        while(itr.hasNext()){
+
+            String key= itr.next();
+            Object value = params.get(key);
+
+            if (first)
+                first = false;
+            else
+                result.append("&");
+
+            result.append(URLEncoder.encode(key, "UTF-8"));
+            result.append("=");
+            result.append(URLEncoder.encode(value.toString(), "UTF-8"));
+        }
+        return result.toString();
     }
 }
 

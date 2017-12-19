@@ -27,6 +27,7 @@
     <string name="finish_line_measure">" km"</string>
     <string name="facebook_app_id">278876872621248</string>
     <string name="fb_login_protocol_scheme">fb278876872621248</string>
+    <string name="events_list">Your next events</string>
 
 
     <string name="permission_rationale">"Contacts permissions are needed for providing email

@@ -35,11 +35,12 @@ public class LocationService extends Service
     private LocationManager mLocationManager = null;
     private static final int LOCATION_INTERVAL = 1000;
     private static final float LOCATION_DISTANCE = 10f;
-
+    private String  userId;
+    private String token;
+    private String eventId;
 
     private class LocationListener implements android.location.LocationListener {
         Location mLastLocation;
-        String  userId = "5a2e5b2e2e890e0004dde6de";
 
         public LocationListener(String provider)
         {
@@ -106,6 +107,9 @@ public class LocationService extends Service
     {
         Log.e(TAG, "onStartCommand");
         super.onStartCommand(intent, flags, startId);
+        userId = intent.getStringExtra("userId");
+        token = intent.getStringExtra("token");
+        eventId = intent.getStringExtra("eventId");
         return START_STICKY;
     }
 
@@ -166,9 +170,7 @@ public class LocationService extends Service
         protected String doInBackground(String... params) {
 
             try {
-                //TODO:change event id : 5a2f8b9f00e2030004da1dce
-                URL url = new URL("https://rider-track-dev.herokuapp.com/api/events/5a2f8b9f00e2030004da1dce/participants/positions"); // here is your URL path
-                //TODO: get eventId
+                URL url = new URL("https://rider-track-dev.herokuapp.com/api/events/"+eventId+"/participants/positions"); // here is your URL path
                 JSONObject postDataParams = new JSONObject();
                 postDataParams.put("userId", params[0]);
                 postDataParams.put("lat", params[1]);

@@ -26,28 +26,35 @@ public class MainActivity extends AppCompatActivity  {
 
 
     @Override
-    protected void onCreate(Bundle savedInstanceState)  {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        facebookButton = (Button) findViewById(R.id.facebook_sign_in_button);
-        googleButton = (Button) findViewById(R.id.google_sign_in_button);
-        emailButton = (Button) findViewById(R.id.email_sign_in_button);
-        emailButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent emailLogin = new Intent(getApplicationContext(), LoginActivity.class);
-                startActivity(emailLogin);
-            }
-        });
-        googleButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent googleAuth = new Intent(getApplicationContext(), GoogleAuth.class);
-                startActivity(googleAuth);
-            }
-        });
 
-        //temporary:just to see error screen
+        // recovering the instance state
+        if (savedInstanceState != null) {
+            Intent eventsList = new Intent(getApplicationContext(), RaceActivity.class);
+            startActivity(eventsList);
+        } else {
+
+            setContentView(R.layout.activity_main);
+            facebookButton = (Button) findViewById(R.id.facebook_sign_in_button);
+            googleButton = (Button) findViewById(R.id.google_sign_in_button);
+            emailButton = (Button) findViewById(R.id.email_sign_in_button);
+            emailButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent emailLogin = new Intent(getApplicationContext(), LoginActivity.class);
+                    startActivity(emailLogin);
+                }
+            });
+            googleButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent googleAuth = new Intent(getApplicationContext(), GoogleAuth.class);
+                    startActivity(googleAuth);
+                }
+            });
+
+            //temporary:just to see error screen
         /*googleButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -55,13 +62,14 @@ public class MainActivity extends AppCompatActivity  {
                 startActivity(emailLogin);
             }
         });*/
-        //temporary:just to see race screen
-        facebookButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent emailLogin = new Intent(getApplicationContext(), RaceActivity.class);
-                startActivity(emailLogin);
-            }
-        });
+            //temporary:just to see race screen
+            facebookButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent emailLogin = new Intent(getApplicationContext(), RaceActivity.class);
+                    startActivity(emailLogin);
+                }
+            });
+        }
     }
 }

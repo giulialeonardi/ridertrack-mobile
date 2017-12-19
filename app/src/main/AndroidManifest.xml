@@ -34,6 +34,7 @@
         <meta-data android:name="com.facebook.sdk.ApplicationId"
             android:value="@string/facebook_app_id"/>
         <activity android:name=".GoogleAuth" />
+        <activity android:name=".EventsListActivity" />
 
     </application>
 
