@@ -357,7 +357,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     }
                     String userId = fieldsList.get(0).replace("\"", "");
                     String role = fieldsList.get(1).replace("\"", "");
-                    String token = fieldsList.get(2).replace("\"", "");
+                    String token = fieldsList.get(2).replace("\"", "").replace(" ", "");
                     String expiration = fieldsList.get(3).replace("\"", "").replace("}", "");
 
                     in.close();
