@@ -1,43 +1,51 @@
 package com.mobileapp.ridertrack;
 
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.annotation.TargetApi;
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Base64;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuInflater;
+import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.PopupMenu;
+import android.widget.TextView;
 import android.widget.Toast;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.reflect.Array;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Collections;
-
 import javax.net.ssl.HttpsURLConnection;
 
 public class EventsListActivity extends AppCompatActivity {
 
     private String userId;
     private String token;
-    private View eventBox;
+    private String eventId;
     private View menuView;
     private ArrayList<Event> eventsList;
+    private View mProgressView;
+    private View mListView;
+    private String logoData;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -48,7 +56,9 @@ public class EventsListActivity extends AppCompatActivity {
         userId = intent.getStringExtra("userId");
         token = intent.getStringExtra("token");
         Log.e("Token", token);
-
+        mProgressView = findViewById(R.id.login_progress);
+        mListView = findViewById(R.id.list);
+        showProgress(true);
         new GetListOfEvents().execute();
 
         menuView = findViewById(R.id.menu);
@@ -86,18 +96,7 @@ public class EventsListActivity extends AppCompatActivity {
             }
         }); //closing the setOnClickListener method
 
-                eventBox = findViewById(R.id.event_box);
-                //TODO: put the event id as the box id
-                eventBox.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        Intent raceActivity = new Intent(getApplicationContext(), RaceActivity.class);
-                        raceActivity.putExtra("userId", userId);
-                        raceActivity.putExtra("token", token);
-                        //raceActivity.putExtra("eventId", eventId);
-                        startActivity(raceActivity);
-                    }
-                });
+
             }
 
 
@@ -182,8 +181,9 @@ public class EventsListActivity extends AppCompatActivity {
 
     public static void longInfo(String str) {
         if(str.length() > 4000) {
-            Log.i("Exception", str.substring(0, 4000));
-            longInfo(str.substring(4000));
+            //Log.i("Exception", str.substring(0, 4000));
+            //longInfo(str.substring(4000));
+            Log.i("Exception", str.substring(str.length()-200, str.length()-1));
         } else
             Log.i("Exception", str);
     }
@@ -196,6 +196,8 @@ public class EventsListActivity extends AppCompatActivity {
             JSONObject jObject = events.getJSONObject(i);
             manageEvent(jObject);
         }
+
+        inflateLayout();
     }
 
     private void manageEvent(JSONObject jObject) throws JSONException {
@@ -255,6 +257,98 @@ public class EventsListActivity extends AppCompatActivity {
         if(jObject.has("updated_at")){
             String updated_at = jObject.getString("updated_at");
             event.setUpdatedAt(updated_at);}
+    }
+
+    private void inflateLayout() throws JSONException {
+        final LinearLayout scrollView = (LinearLayout) findViewById(R.id.scroll_down);
+        LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                showProgress(false);
+            }
+        });
+        for (int i = 0; i < eventsList.size(); i++) {
+            //Creating copy of event box by inflating it
+            final LinearLayout event = (LinearLayout) inflater.inflate(R.layout.event_box, null);
+            eventId = eventsList.get(i).getId();
+            TextView title = event.findViewById(R.id.event_name);
+            title.setText(eventsList.get(i).getName());
+            TextView city = event.findViewById(R.id.location);
+            city.setText(eventsList.get(i).getCity());
+            TextView date = event.findViewById(R.id.date);
+            date.setText(eventsList.get(i).getStartingDate());
+            TextView type = event.findViewById(R.id.type);
+            type.setText(eventsList.get(i).getType());
+            TextView length = event.findViewById(R.id.length);
+            length.setText(String.valueOf(eventsList.get(i).getLength()));
+            ImageView logo = event.findViewById(R.id.event_image);
+            logoData = eventsList.get(i).getLogo().substring(eventsList.get(i).getLogo().indexOf("["), eventsList.get(i).getLogo().indexOf("]")+2).replace(" ", "");
+            JSONArray arr = new JSONArray(logoData);
+            byte[] myArray = new byte[logoData.length()];
+            for (int j = 0; j < arr.length(); j++) {
+                myArray[j] = (byte) arr.getInt(j);
+            }
+            Bitmap bmp = BitmapFactory.decodeByteArray(myArray, 0, myArray.length);
+            logo.setImageBitmap(bmp);
+            LinearLayout event_box = findViewById(R.id.event_box);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(event_box.getLayoutParams());
+            params.setMargins(10, 20, 10, 20);
+            event.setLayoutParams(params);
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    scrollView.addView(event);
+                }
+            });
+            event.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Intent raceActivity = new Intent(getApplicationContext(), RaceActivity.class);
+                    raceActivity.putExtra("userId", userId);
+                    raceActivity.putExtra("token", token);
+                    raceActivity.putExtra("eventId", eventId);
+                    startActivity(raceActivity);
+                }
+            });
+        }
+        longInfo(logoData);
+    }
+    /**
+     * Shows the progress UI and hides the login form.
+     */
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
+    private void showProgress(final boolean show) {
+        // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
+        // for very easy animations. If available, use these APIs to fade-in
+        // the progress spinner.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
+            int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
+
+            mListView.setVisibility(show ? View.GONE : View.VISIBLE);
+            mListView.animate().setDuration(shortAnimTime).alpha(
+                    show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    mListView.setVisibility(show ? View.GONE : View.VISIBLE);
+                }
+            });
+
+            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+            mProgressView.animate().setDuration(shortAnimTime).alpha(
+                    show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+                }
+            });
+
+        } else {
+            // The ViewPropertyAnimator APIs are not available, so simply show
+            // and hide the relevant UI components.
+            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+            mListView.setVisibility(show ? View.GONE : View.VISIBLE);
+        }
     }
 
 }

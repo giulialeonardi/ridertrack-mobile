@@ -366,6 +366,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     eventsList.putExtra("userId", userId);
                     eventsList.putExtra("token", token);
                     startActivity(eventsList);
+                    finish();
                     return true;
 
                 }

@@ -30,20 +30,50 @@
             android:src="@drawable/menu_icon"
             android:layout_marginEnd="20dp"/>
     </LinearLayout>
+
+
     <ScrollView
+        android:id="@+id/scroll_view"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="6"
         android:background="@color/dark_red">
+
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:id="@+id/scroll_down"
+    >
+
+    <ProgressBar
+        android:id="@+id/login_progress"
+        style="?android:attr/progressBarStyleLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="170dp"
+        android:layout_gravity="center"
+        android:indeterminate="true"
+        android:indeterminateTintMode="src_atop"
+        android:indeterminateTint="@color/white"
+        android:visibility="gone"/>
+
+    <LinearLayout
+        android:id="@+id/list"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp">
 
         <LinearLayout
            android:id="@+id/event_box"
            android:layout_width="wrap_content"
            android:layout_height="wrap_content"
            android:orientation="vertical"
-           android:layout_marginHorizontal="10dp"
-           android:layout_marginVertical="20dp"
-           android:background="@color/white">
+           android:background="@color/white"
+            android:visibility="gone">
 
             <TextView
                 android:id="@+id/event_name"
@@ -160,5 +190,7 @@
             </LinearLayout>
         </LinearLayout>
        </LinearLayout>
+</LinearLayout>
+</LinearLayout>
     </ScrollView>
 </LinearLayout>
