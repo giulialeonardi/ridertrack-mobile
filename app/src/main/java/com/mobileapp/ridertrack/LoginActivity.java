@@ -4,6 +4,7 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
@@ -361,6 +362,11 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     String expiration = fieldsList.get(3).replace("\"", "").replace("}", "");
 
                     in.close();
+                    SharedPreferences sp=getSharedPreferences("Login", MODE_PRIVATE);
+                    SharedPreferences.Editor Ed=sp.edit();
+                    Ed.putString("userId", userId);
+                    Ed.putString("token", token);
+                    Ed.commit();
                     Log.e("RESPONSE", sb.toString());
                     Intent eventsList = new Intent(getApplicationContext(), EventsListActivity.class);
                     eventsList.putExtra("userId", userId);

@@ -28,7 +28,15 @@
     <string name="facebook_app_id">278876872621248</string>
     <string name="fb_login_protocol_scheme">fb278876872621248</string>
     <string name="events_list">Your next events</string>
-
+    <string name= "question_timeout">How often do you want to send your position? </string>
+    <string name= "description_timeout">The less minutes pass between two consequent sendings, the most accurate your track will be</string>
+    <string name="timeout_1">5 seconds</string>
+    <string name="timeout_2">10 seconds</string>
+    <string name="timeout_3">15 seconds</string>
+    <string name="timeout_4">20 seconds</string>
+    <string name="timeout_5">25 seconds</string>
+    <string name="timeout_6">30 seconds</string>
+    <string name="done">Set timeout</string>
 
     <string name="permission_rationale">"Contacts permissions are needed for providing email
         completions."

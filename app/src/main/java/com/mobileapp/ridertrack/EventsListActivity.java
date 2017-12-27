@@ -4,17 +4,20 @@ package com.mobileapp.ridertrack;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
+import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.SystemClock;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -28,24 +31,26 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import javax.net.ssl.HttpsURLConnection;
+
+import static com.mobileapp.ridertrack.LocationService.Constants.INTENT_EXTRA;
 
 public class EventsListActivity extends AppCompatActivity {
 
     private String userId;
     private String token;
-    private String eventId;
     private View menuView;
     private ArrayList<Event> eventsList;
     private View mProgressView;
     private View mListView;
     private String logoData;
+    private int delay;
+    private LinearLayout scrollView;
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -55,7 +60,12 @@ public class EventsListActivity extends AppCompatActivity {
         Intent intent = getIntent();
         userId = intent.getStringExtra("userId");
         token = intent.getStringExtra("token");
-        Log.e("Token", token);
+        delay = intent.getIntExtra("delay", 10);
+        SharedPreferences sp=getSharedPreferences("Login", MODE_PRIVATE);
+        SharedPreferences.Editor Ed=sp.edit();
+        Ed.putString("delay", String.valueOf(delay));
+        Ed.commit();
+        Log.e("[EventsListActivity]", String.valueOf(delay));
         mProgressView = findViewById(R.id.login_progress);
         mListView = findViewById(R.id.list);
         showProgress(true);
@@ -72,19 +82,25 @@ public class EventsListActivity extends AppCompatActivity {
                 //registering popup with OnMenuItemClickListener
                 popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                     public boolean onMenuItemClick(MenuItem item) {
-                        Toast.makeText(
-                                EventsListActivity.this,
-                                "You Clicked : " + item.getTitle(),
-                                Toast.LENGTH_SHORT
-                        ).show();
-
                         // Handle item selection
                         switch (item.getItemId()) {
                             case R.id.position:
-                                //newGame();
+                                Intent timeout = new Intent(getApplicationContext(), TimeoutActivity.class);
+                                timeout.putExtra("userId", userId);
+                                timeout.putExtra("token", token);
+                                startActivity(timeout);
+                                finish();
                                 return true;
                             case R.id.logout:
-                                //showHelp();
+                                SharedPreferences sp=getSharedPreferences("Login", MODE_PRIVATE);
+                                SharedPreferences.Editor Ed=sp.edit();
+                                Ed.putString("userId", null);
+                                Ed.putString("token", null);
+                                Ed.putString("delay", null);
+                                Ed.commit();
+                                Intent main = new Intent(getApplicationContext(), MainActivity.class);
+                                startActivity(main);
+                                finish();
                                 return true;
                             default:
                                 return false;
@@ -100,6 +116,7 @@ public class EventsListActivity extends AppCompatActivity {
             }
 
 
+
     public class GetListOfEvents extends AsyncTask<String, Void, Boolean> {
 
         @Override
@@ -109,15 +126,11 @@ public class EventsListActivity extends AppCompatActivity {
                 URL url = null;
                 String response = null;
                 url = new URL("https://rider-track-dev.herokuapp.com/api/users/" + userId + "/enrolledEvents");
-                Log.e("[EventsListActivity]", "URL error");
                 //create the connection
                 connection = (HttpURLConnection) url.openConnection();
-                Log.e("[EventsListActivity]", "open connection error");
                 connection.setRequestProperty("Authorization", "JWT " + token);
-                Log.e("[EventsListActivity]", "error after token");
                 //set the request method to GET
                 connection.setRequestMethod("GET");
-                Log.e("[EventsListActivity]", "error after GET");
 
                 //read in the data from input stream, this can be done a variety of ways
                 int responseCode = connection.getResponseCode();
@@ -137,7 +150,7 @@ public class EventsListActivity extends AppCompatActivity {
                     }
 
                     in.close();
-
+                    //TODO: manage empty list
                     /*if( non ci sono eventi in programma){
                     }else{
                      */
@@ -145,7 +158,7 @@ public class EventsListActivity extends AppCompatActivity {
                     splitResponse(sb);
                     Log.e("Number of events", String.valueOf(eventsList.size()));
                     for(Event event : eventsList){
-                        Log.e("Event name", event.getName());
+                        Log.e("Event name", event.getName() + "(id: " + event.getId() + ")");
                     }
                     return true;
                 }else{
@@ -165,6 +178,69 @@ public class EventsListActivity extends AppCompatActivity {
                         break;
                     }
                     Log.e("Response", sb.toString());
+                    //TODO: add error message
+                    //["jwt expired"]
+                    in.close();
+                    return true;
+                }
+            } catch (Exception e) {
+
+                longInfo(e.toString());
+                return false;
+
+            } finally {
+                connection.disconnect();
+            }
+        }
+    }
+    public class GetStartingPoint extends AsyncTask<String, Void, Boolean> {
+
+        @Override
+        protected Boolean doInBackground(String... strings) {
+            HttpURLConnection connection = null;
+            try {
+                URL url = null;
+                String response = null;
+                url = new URL("https://rider-track-dev.herokuapp.com/api/events/" + strings[0] + "/route");
+                //create the connection
+                connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestProperty("Authorization", "JWT " + token);
+                //set the request method to GET
+                connection.setRequestMethod("GET");
+
+                //read in the data from input stream, this can be done a variety of ways
+                int responseCode = connection.getResponseCode();
+                if (responseCode == HttpsURLConnection.HTTP_OK) {
+                    //create your inputsream
+                    String line = "";
+
+                    BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+
+                    StringBuffer sb = new StringBuffer("");
+
+                    while ((line = in.readLine()) != null) {
+
+                        sb.append(line);
+                        break;
+                    }
+                    extractStartingPoint(sb, strings[0]);
+                    scrollView.setClickable(true);
+                    in.close();
+                    return true;
+                }else{
+                    String line = "";
+
+                    BufferedReader in = new BufferedReader(new
+                            InputStreamReader(
+                            connection.getErrorStream()));
+
+                    StringBuffer sb = new StringBuffer("");
+
+                    while ((line = in.readLine()) != null) {
+
+                        sb.append(line);
+                        break;
+                    }
                     in.close();
                     return true;
                 }
@@ -200,15 +276,40 @@ public class EventsListActivity extends AppCompatActivity {
         inflateLayout();
     }
 
+    private void extractStartingPoint(StringBuffer sb, String eventId) throws JSONException {
+        JSONObject response = new JSONObject(sb.toString());
+        JSONArray coord = response.getJSONArray("coordinates");
+        if(coord.getJSONObject(0) != null) {
+            JSONObject jObject = coord.getJSONObject(0);
+            String latLng = null;
+            if (jObject.has("lat") && jObject.has("lng")) {
+                String lat = jObject.getString("lat");
+                String lng = jObject.getString("lng");
+                latLng = lat + "," + lng;
+                findEventFromID(eventId).setStartingPoint(latLng);
+                Log.e("EventsListActivity", " StartingPoint set");
+
+            } else {
+                //TODO: error message: wring coordinates
+            }
+        }else{
+            //TODO: error message: no coordinates
+        }
+    }
+
     private void manageEvent(JSONObject jObject) throws JSONException {
         Event event = new Event();
         eventsList.add(event);
+        if(jObject.has("_id")){
+            String id = jObject.getString("_id");
+            event.setId(id);
+            new GetStartingPoint().execute(id);}
         if(jObject.has("name")){
-        String name = jObject.getString("name");
-        event.setName(name);}
+            String name = jObject.getString("name");
+            event.setName(name);}
         if(jObject.has("organizerId")){
-        String organizerId = jObject.getString("organizerId");
-        event.setOrganizerId(organizerId);}
+            String organizerId = jObject.getString("organizerId");
+            event.setOrganizerId(organizerId);}
         if(jObject.has("type")){
             String type = jObject.getString("type");
             event.setType(type);}
@@ -260,7 +361,7 @@ public class EventsListActivity extends AppCompatActivity {
     }
 
     private void inflateLayout() throws JSONException {
-        final LinearLayout scrollView = (LinearLayout) findViewById(R.id.scroll_down);
+        scrollView = (LinearLayout) findViewById(R.id.scroll_down);
         LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         runOnUiThread(new Runnable() {
             @Override
@@ -271,7 +372,8 @@ public class EventsListActivity extends AppCompatActivity {
         for (int i = 0; i < eventsList.size(); i++) {
             //Creating copy of event box by inflating it
             final LinearLayout event = (LinearLayout) inflater.inflate(R.layout.event_box, null);
-            eventId = eventsList.get(i).getId();
+            event.setClickable(false);
+            event.setTag(eventsList.get(i).getId());
             TextView title = event.findViewById(R.id.event_name);
             title.setText(eventsList.get(i).getName());
             TextView city = event.findViewById(R.id.location);
@@ -307,8 +409,13 @@ public class EventsListActivity extends AppCompatActivity {
                     Intent raceActivity = new Intent(getApplicationContext(), RaceActivity.class);
                     raceActivity.putExtra("userId", userId);
                     raceActivity.putExtra("token", token);
-                    raceActivity.putExtra("eventId", eventId);
+                    raceActivity.putExtra("eventId", event.getTag().toString());
+                    raceActivity.putExtra("delay", delay);
+                    raceActivity.putExtra("name", findEventNameFromID(event.getTag().toString()));
+                    raceActivity.putExtra("startingPoint", findEventStartingPointFromID(event.getTag().toString()));
+                    Log.e("Event tag ", event.getTag().toString());
                     startActivity(raceActivity);
+                    finish();
                 }
             });
         }
@@ -350,6 +457,38 @@ public class EventsListActivity extends AppCompatActivity {
             mListView.setVisibility(show ? View.GONE : View.VISIBLE);
         }
     }
+
+    private String findEventNameFromID(String eventId) {
+        String name = null;
+        for (Event event : eventsList) {
+            if (event.getId().equals(eventId)) {
+                name = event.getName();
+            }
+        }
+        return name;
+    }
+
+    private Event findEventFromID(String eventId) {
+        int index = -1;
+        for (int i=0; i<eventsList.size(); i++) {
+            if (eventsList.get(i).getId().equals(eventId)) {
+              index = i;
+            }
+        }
+        return eventsList.get(index);
+    }
+
+    private String findEventStartingPointFromID(String eventId) {
+        String latLng = "";
+        for (Event event : eventsList) {
+            if (event.getId().equals(eventId)) {
+                latLng = event.getStartingPoint();
+                Log.e("findStartingPointFromID", latLng);
+            }
+        }
+        return latLng;
+    }
+
 
 }
 

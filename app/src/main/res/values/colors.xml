@@ -8,4 +8,8 @@
     <color name="aquamarine">#08AE9E</color>
     <color name="blue">#485A96</color>
     <color name="dark_red">#BE1F2D</color>
+    <color name="pink">#ffe6e6</color>
+    <color name="black">#000000</color>
+    <color name="gray">#6a6c74</color>
+    <color name="darker_red">#4d1300</color>
 </resources>

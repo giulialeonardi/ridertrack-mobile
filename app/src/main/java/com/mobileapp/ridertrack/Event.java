@@ -11,6 +11,7 @@ public class Event {
     private String startingDate;
     private String country;
     private String city;
+    private String startingPoint;
     private String _v;
     private String enrollmentClosingAt;
     private String enrollmentOpeningAt;
@@ -174,5 +175,13 @@ public class Event {
 
     public void setUpdatedAt(String updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public String getStartingPoint() {
+        return startingPoint;
+    }
+
+    public void setStartingPoint(String startingPoint) {
+        this.startingPoint = startingPoint;
     }
 }

@@ -8,6 +8,7 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
@@ -23,8 +24,11 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -38,14 +42,19 @@ public class LocationService extends Service
     private String  userId;
     private String token;
     private String eventId;
+    private ArrayList<Location> listOfLocations;
+    private ArrayList<String> listOfTimestamps;
+    private int delay;
 
     private class LocationListener implements android.location.LocationListener {
         Location mLastLocation;
 
-        public LocationListener(String provider)
-        {
+        public LocationListener(String provider) {
             Log.e(TAG, "LocationListener " + provider);
             mLastLocation = new Location(provider);
+            listOfLocations = new ArrayList<>();
+            listOfTimestamps = new ArrayList<>();
+
         }
 
         @Override
@@ -56,14 +65,8 @@ public class LocationService extends Service
             //calculate timestamp
             Long tsLong = System.currentTimeMillis()/1000;
             String timeStamp = tsLong.toString();
-            //send to server
-            new SendPostRequest().execute(userId, String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude()), timeStamp);
-            //send to activity
-            Intent intent = new Intent();
-            intent.setAction(Constants.INTENT_ACTION);
-            intent.putExtra(Constants.INTENT_EXTRA, mLastLocation);
-            LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getApplicationContext());
-            lbm.sendBroadcast(intent);
+            listOfLocations.add(location);
+            listOfTimestamps.add(timeStamp);
         }
 
         @Override
@@ -84,6 +87,7 @@ public class LocationService extends Service
             Log.e(TAG, "onStatusChanged: " + provider);
         }
     }
+
 
     public class Constants {
         public static final String INTENT_ACTION = "com.mobileapp.ridertrack.LOCATION";
@@ -110,6 +114,37 @@ public class LocationService extends Service
         userId = intent.getStringExtra("userId");
         token = intent.getStringExtra("token");
         eventId = intent.getStringExtra("eventId");
+        delay = intent.getIntExtra("delay", 10);
+        Log.e("I'm sending data to "+ eventId, " every "+ delay+ " seconds");
+        //Delay is in millis
+        final int delayMillis = delay * 1000;
+        Log.e("[Location Service]", String.valueOf(delayMillis));
+        final Handler ha = new Handler();
+        ha.postDelayed(new Runnable() {
+
+            @Override
+            public void run() {
+                if (listOfLocations.size() > 0) {
+                    Location location = listOfLocations.get(listOfLocations.size()-1);
+                    String timeStamp = listOfTimestamps.get(listOfTimestamps.size()-1);
+                    //send to server
+                    new SendPostRequest().execute(userId, String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude()), timeStamp);
+                    //send to activity
+                    Intent intent = new Intent();
+                    intent.setAction(Constants.INTENT_ACTION);
+                    intent.putExtra(Constants.INTENT_EXTRA, location);
+                    LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getApplicationContext());
+                    lbm.sendBroadcast(intent);
+                    ha.postDelayed(this, delayMillis);
+                    listOfLocations.remove(listOfLocations.size()-1);
+                    listOfTimestamps.remove(listOfTimestamps.size()-1);
+                } else {
+                    Log.e("No data available", "Wait " + delayMillis/2000 + " seconds");
+                    ha.postDelayed(this, delayMillis/2);
+                }
+            }
+        }, delayMillis);
+
         return START_STICKY;
     }
 
@@ -136,8 +171,6 @@ public class LocationService extends Service
         } catch (IllegalArgumentException ex) {
             Log.d(TAG, "gps provider does not exist " + ex.getMessage());
         }
-
-
     }
 
     @Override
@@ -181,6 +214,7 @@ public class LocationService extends Service
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setReadTimeout(15000 /* milliseconds */);
                 conn.setConnectTimeout(15000 /* milliseconds */);
+                conn.setRequestProperty("Authorization", "JWT " + token);
                 conn.setRequestMethod("POST");
                 conn.setDoInput(true);
                 conn.setDoOutput(true);
@@ -256,5 +290,4 @@ public class LocationService extends Service
         }
         return result.toString();
     }
-
 }

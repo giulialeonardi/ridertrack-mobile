@@ -18,6 +18,10 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <meta-data android:name="com.facebook.sdk.ApplicationId" android:value="@string/facebook_app_id"/>
+        <provider android:authorities="com.facebook.app.FacebookContentProvider278876872621248"
+            android:name="com.facebook.FacebookContentProvider"
+            android:exported="true" />
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name">
@@ -35,6 +39,7 @@
             android:value="@string/facebook_app_id"/>
         <activity android:name=".GoogleAuth" />
         <activity android:name=".EventsListActivity" />
+        <activity android:name=".TimeoutActivity" />
 
     </application>
 
