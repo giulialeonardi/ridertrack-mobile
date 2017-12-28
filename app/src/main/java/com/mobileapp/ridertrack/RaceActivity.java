@@ -37,6 +37,9 @@ import com.facebook.share.model.SharePhotoContent;
 import com.facebook.share.widget.ShareDialog;
 import com.google.android.gms.vision.barcode.Barcode;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -45,6 +48,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import javax.net.ssl.HttpsURLConnection;
 
+import static com.google.android.gms.internal.zzagr.runOnUiThread;
 import static com.mobileapp.ridertrack.LocationService.Constants.INTENT_EXTRA;
 
 public class RaceActivity extends AppCompatActivity {
@@ -69,6 +73,7 @@ public class RaceActivity extends AppCompatActivity {
     private Location startingPoint;
     private CallbackManager callbackManager;
     private ShareDialog shareDialog;
+    private Double distanceToFinishLine;
 
 
     @Override
@@ -123,6 +128,12 @@ public class RaceActivity extends AppCompatActivity {
                 Bundle extras = intent.getExtras();
                 if (extras != null) {
                     location = (Location) extras.get(INTENT_EXTRA);
+                    distanceToFinishLine = (Double) extras.getDouble("distance");
+                    try {
+                        setDistanceToFinishLine(distanceToFinishLine);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
                     currentTime = SystemClock.elapsedRealtime();
                     Log.i("ACTIVITY", "Intent Extra key=" + INTENT_EXTRA + ":" + location);
                     locationArrayList.add(location);
@@ -139,7 +150,6 @@ public class RaceActivity extends AppCompatActivity {
         };
 
         //distance to finish line calculation
-
 
         share.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -243,11 +253,11 @@ public class RaceActivity extends AppCompatActivity {
             String string;
             if(location != null) {
                 string = "http://maps.googleapis.com/maps/api/staticmap?&zoom=16&size=800x400&maptype=roadmap&sensor=true&center=" + location.getLatitude() + "," + location.getLongitude() +
-                        "&markers=color:black|" + location.getLatitude() + "," + location.getLongitude();
+                        "&markers=color:red|" + location.getLatitude() + "," + location.getLongitude();
             }else{
                 string = "http://maps.googleapis.com/maps/api/staticmap?&zoom=16&size=800x400&maptype=roadmap&sensor=true&center=" +
                         startingPoint.getLatitude() + "," + startingPoint.getLongitude() +
-                        "&markers=color:black|" + startingPoint.getLatitude() + "," + startingPoint.getLongitude();
+                        "&markers=color:red|" + startingPoint.getLatitude() + "," + startingPoint.getLongitude();
             }
             URL url = null;
             HttpURLConnection connection = null;
@@ -256,8 +266,7 @@ public class RaceActivity extends AppCompatActivity {
                 connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
                 if (connection.getResponseCode() == HttpsURLConnection.HTTP_OK) { // check HTTP code
-                    Bitmap bitmap = BitmapFactory.decodeStream(connection.getInputStream());
-                    shareDialog(bitmap, string);
+                    shareDialog(string);
                 }
 
                 return null;
@@ -267,29 +276,24 @@ public class RaceActivity extends AppCompatActivity {
             return null;
         }
     }
-    public void shareDialog(Bitmap bitmap, String string) {
+    public void shareDialog(String string) {
 
         if (shareDialog.canShow(SharePhotoContent.class)) {
 
 // Create an object
-            SharePhoto photo = new SharePhoto.Builder()
-                    .setBitmap(bitmap)
-                    .setUserGenerated(true)
-                    .build();
             ShareOpenGraphObject object = new ShareOpenGraphObject.Builder()
                     .putString("og:type", "fitness.course")
-                    .putString("og:url","https://rider-track-dev.herokuapp.com/api/events/"+eventId+"/participants/positions")
+                    .putString("og:url","https://rider-track-dev.herokuapp.com/api/events/"+eventId)
                     .putString("og:image", string)
                     .putString("og:description",
-                            "Track me on Ridertrack")
+                            "Hey, there! I'm competing in "+name+". Track me on Ridertrack.")
+                    .putBoolean("og:rich_attachment", true)
                     .putString("og:title", "Hey, there! I'm competing")
                     .build();
 
             // Create an action
             ShareOpenGraphAction action = new ShareOpenGraphAction.Builder()
                     .setActionType("fitness.run")
-                    .putBoolean("fb:explicitly_shared", true)
-                    .putString("message", "Hey, there! I'm competing")
                     .putObject("fitness:course", object)
                     .build();
             // Create the content
@@ -299,5 +303,17 @@ public class RaceActivity extends AppCompatActivity {
 
             ShareDialog.show(this, content);
         }
+    }
+    private void setDistanceToFinishLine(Double distanceToFinishLine) throws JSONException {
+        final String dist = String.valueOf(round(distanceToFinishLine.floatValue(), 2));
+
+            Log.e("Distance", String.valueOf(distanceToFinishLine));
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    finishLine.setText(dist);
+                }
+            });
+
     }
 }

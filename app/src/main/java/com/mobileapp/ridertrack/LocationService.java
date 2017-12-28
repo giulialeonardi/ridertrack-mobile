@@ -14,10 +14,13 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.Toast;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -32,6 +35,8 @@ import java.util.Map;
 
 import javax.net.ssl.HttpsURLConnection;
 
+import static com.google.android.gms.internal.zzagr.runOnUiThread;
+
 
 public class LocationService extends Service
 {
@@ -44,6 +49,7 @@ public class LocationService extends Service
     private String eventId;
     private ArrayList<Location> listOfLocations;
     private ArrayList<String> listOfTimestamps;
+    private ArrayList<Double> listOfDistances;
     private int delay;
 
     private class LocationListener implements android.location.LocationListener {
@@ -54,6 +60,7 @@ public class LocationService extends Service
             mLastLocation = new Location(provider);
             listOfLocations = new ArrayList<>();
             listOfTimestamps = new ArrayList<>();
+            listOfDistances = new ArrayList<>();
 
         }
 
@@ -67,6 +74,7 @@ public class LocationService extends Service
             String timeStamp = tsLong.toString();
             listOfLocations.add(location);
             listOfTimestamps.add(timeStamp);
+            //listOfDistances.add(distance);
         }
 
         @Override
@@ -133,11 +141,17 @@ public class LocationService extends Service
                     Intent intent = new Intent();
                     intent.setAction(Constants.INTENT_ACTION);
                     intent.putExtra(Constants.INTENT_EXTRA, location);
+                    while(listOfDistances.size() == 0){
+                        //wait for the asyn function
+                    }
+                    Double distance = listOfDistances.get(listOfDistances.size()-1);
+                    intent.putExtra("distance", distance);
                     LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getApplicationContext());
                     lbm.sendBroadcast(intent);
                     ha.postDelayed(this, delayMillis);
                     listOfLocations.remove(listOfLocations.size()-1);
                     listOfTimestamps.remove(listOfTimestamps.size()-1);
+                    listOfDistances.remove(listOfDistances.size()-1);
                 } else {
                     Log.e("No data available", "Wait " + delayMillis/2000 + " seconds");
                     ha.postDelayed(this, delayMillis/2);
@@ -246,12 +260,28 @@ public class LocationService extends Service
                     }
 
                     in.close();
+                    Log.e("Response to POST", sb.toString());
+                    getDistanceToFinishLine(sb);
                     return sb.toString();
 
                 }
                 else {
-                    Log.e("false", String.valueOf(responseCode));
-                    return new String("false : "+responseCode);
+                    BufferedReader in=new BufferedReader(new
+                            InputStreamReader(
+                            conn.getErrorStream()));
+
+                    StringBuffer sb = new StringBuffer("");
+                    String line="";
+
+                    while((line = in.readLine()) != null) {
+
+                        sb.append(line);
+                        break;
+                    }
+
+                    in.close();
+                    Log.e("false", String.valueOf(responseCode) + sb.toString());
+                    return sb.toString();
                 }
             }
             catch(Exception e){
@@ -289,5 +319,10 @@ public class LocationService extends Service
             result.append(URLEncoder.encode(value.toString(), "UTF-8"));
         }
         return result.toString();
+    }
+    private void getDistanceToFinishLine(StringBuffer sb) throws JSONException {
+        JSONObject response = new JSONObject(sb.toString());
+        Double distance = response.getDouble("distanceToTheEnd" );
+        listOfDistances.add(distance);
     }
 }

@@ -37,6 +37,8 @@
     <string name="timeout_5">25 seconds</string>
     <string name="timeout_6">30 seconds</string>
     <string name="done">Set timeout</string>
+    <string name="no_events">No events planned.\nLook for the next one!</string>
+    <string name="go_website">List of events</string>
 
     <string name="permission_rationale">"Contacts permissions are needed for providing email
         completions."

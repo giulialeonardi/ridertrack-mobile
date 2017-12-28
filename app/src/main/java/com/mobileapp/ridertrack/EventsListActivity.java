@@ -12,6 +12,7 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.Location;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -22,6 +23,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
@@ -150,10 +152,8 @@ public class EventsListActivity extends AppCompatActivity {
                     }
 
                     in.close();
-                    //TODO: manage empty list
-                    /*if( non ci sono eventi in programma){
-                    }else{
-                     */
+                    Log.e("Empty list", sb.toString());
+
                     eventsList = new ArrayList<>();
                     splitResponse(sb);
                     Log.e("Number of events", String.valueOf(eventsList.size()));
@@ -223,6 +223,7 @@ public class EventsListActivity extends AppCompatActivity {
                         sb.append(line);
                         break;
                     }
+
                     extractStartingPoint(sb, strings[0]);
                     scrollView.setClickable(true);
                     in.close();
@@ -267,13 +268,32 @@ public class EventsListActivity extends AppCompatActivity {
     private void splitResponse(StringBuffer sb) throws JSONException {
         JSONObject response = new JSONObject(sb.toString());
         JSONArray events = response.getJSONArray("events");
+        if (events.length() == 0) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    showProgress(false);
+                    TextView noEvents = findViewById(R.id.no_events);
+                    Button goWeb = findViewById(R.id.go_website);
+                    noEvents.setVisibility(View.VISIBLE);
+                    goWeb.setVisibility(View.VISIBLE);
+                    goWeb.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://rider-track-dev.herokuapp.com/events"));
+                            startActivity(browserIntent);
+                        }
+                    });
+                }
+            });
+        } else {
+            for (int i = 0; i < events.length(); i++) {
+                JSONObject jObject = events.getJSONObject(i);
+                manageEvent(jObject);
+            }
 
-        for (int i = 0; i < events.length(); i++) {
-            JSONObject jObject = events.getJSONObject(i);
-            manageEvent(jObject);
+            inflateLayout();
         }
-
-        inflateLayout();
     }
 
     private void extractStartingPoint(StringBuffer sb, String eventId) throws JSONException {
@@ -290,7 +310,7 @@ public class EventsListActivity extends AppCompatActivity {
                 Log.e("EventsListActivity", " StartingPoint set");
 
             } else {
-                //TODO: error message: wring coordinates
+                //TODO: error message: wrong coordinates
             }
         }else{
             //TODO: error message: no coordinates
