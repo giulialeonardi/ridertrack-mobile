@@ -76,7 +76,7 @@
     <TextView
         android:id="@+id/finish_line"
         android:layout_width="0dp"
-        android:layout_weight="3"
+        android:layout_weight="1"
         android:layout_height="wrap_content"
         android:textColor="@color/white"
         android:gravity="right"
@@ -84,7 +84,7 @@
         android:textSize="50sp"/>
         <TextView
             android:layout_width="0dp"
-            android:layout_weight="4"
+            android:layout_weight="1"
             android:layout_height="wrap_content"
             android:textColor="@color/white"
             android:text="@string/finish_line_measure"

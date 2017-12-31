@@ -14,13 +14,10 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.Toast;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -28,15 +25,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
-
 import javax.net.ssl.HttpsURLConnection;
-
-import static com.google.android.gms.internal.zzagr.runOnUiThread;
-
 
 public class LocationService extends Service
 {
@@ -122,7 +112,7 @@ public class LocationService extends Service
         userId = intent.getStringExtra("userId");
         token = intent.getStringExtra("token");
         eventId = intent.getStringExtra("eventId");
-        delay = intent.getIntExtra("delay", 10);
+        delay = intent.getIntExtra("delay", 5);
         Log.e("I'm sending data to "+ eventId, " every "+ delay+ " seconds");
         //Delay is in millis
         final int delayMillis = delay * 1000;
@@ -264,6 +254,31 @@ public class LocationService extends Service
                     getDistanceToFinishLine(sb);
                     return sb.toString();
 
+                } if (responseCode == HttpsURLConnection.HTTP_BAD_REQUEST){
+                    BufferedReader in=new BufferedReader(new
+                            InputStreamReader(
+                            conn.getErrorStream()));
+
+                    StringBuffer sb = new StringBuffer("");
+                    String line="";
+
+                    while((line = in.readLine()) != null) {
+
+                        sb.append(line);
+                        break;
+                    }
+
+                    in.close();
+                    Log.e("Tracking finished", sb.toString());
+                    Intent intent = new Intent();
+                    intent.setAction(Constants.INTENT_ACTION);
+                    intent.putExtra("tracking", "stop");
+                    LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getApplicationContext());
+                    lbm.sendBroadcast(intent);
+                    stopSelf();
+
+                    Log.e("false", String.valueOf(responseCode) + sb.toString());
+                    return sb.toString();
                 }
                 else {
                     BufferedReader in=new BufferedReader(new
@@ -280,6 +295,7 @@ public class LocationService extends Service
                     }
 
                     in.close();
+
                     Log.e("false", String.valueOf(responseCode) + sb.toString());
                     return sb.toString();
                 }
@@ -292,8 +308,7 @@ public class LocationService extends Service
 
         @Override
         protected void onPostExecute(String result) {
-            Toast.makeText(getApplicationContext(), result,
-                    Toast.LENGTH_LONG).show();
+
         }
     }
 
@@ -325,4 +340,5 @@ public class LocationService extends Service
         Double distance = response.getDouble("distanceToTheEnd" );
         listOfDistances.add(distance);
     }
+
 }

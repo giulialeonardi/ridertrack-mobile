@@ -4,13 +4,10 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.location.Location;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.SystemClock;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
@@ -24,31 +21,30 @@ import android.widget.Toast;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
-import com.facebook.GraphRequest;
-import com.facebook.GraphResponse;
-import com.facebook.HttpMethod;
 import com.facebook.share.Sharer;
-import com.facebook.share.model.ShareLinkContent;
 import com.facebook.share.model.ShareOpenGraphAction;
 import com.facebook.share.model.ShareOpenGraphContent;
 import com.facebook.share.model.ShareOpenGraphObject;
-import com.facebook.share.model.SharePhoto;
 import com.facebook.share.model.SharePhotoContent;
 import com.facebook.share.widget.ShareDialog;
-import com.google.android.gms.vision.barcode.Barcode;
-
 import org.json.JSONException;
 import org.json.JSONObject;
-
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
+
 import javax.net.ssl.HttpsURLConnection;
 
-import static com.google.android.gms.internal.zzagr.runOnUiThread;
 import static com.mobileapp.ridertrack.LocationService.Constants.INTENT_EXTRA;
 
 public class RaceActivity extends AppCompatActivity {
@@ -61,7 +57,6 @@ public class RaceActivity extends AppCompatActivity {
     private Location location;
     private float distance;
     private long  currentTime;
-    //private Location startingPoint;
     private ArrayList<Location> locationArrayList;
     private BroadcastReceiver receiver;
     private LocalBroadcastManager lbm;
@@ -74,6 +69,8 @@ public class RaceActivity extends AppCompatActivity {
     private CallbackManager callbackManager;
     private ShareDialog shareDialog;
     private Double distanceToFinishLine;
+    private String startTime;
+
 
 
     @Override
@@ -94,45 +91,64 @@ public class RaceActivity extends AppCompatActivity {
         userId = intent.getStringExtra("userId");
         token = intent.getStringExtra("token");
         eventId = intent.getStringExtra("eventId");
-        delay = intent.getIntExtra("delay", 10);
+        delay = intent.getIntExtra("delay", 5);
         name = intent.getStringExtra("name");
+        startTime = intent.getStringExtra("startingTime");
+        try {
+            startTracking(startTime);
+            //time calculation
+            time.setOnChronometerTickListener(new Chronometer.OnChronometerTickListener() {
+                @Override
+                public void onChronometerTick(Chronometer chronometer) {
+                    long time = SystemClock.elapsedRealtime() - chronometer.getBase();
+                    int h = (int) (time / 3600000);
+                    int m = (int) (time - h * 3600000) / 60000;
+                    int s = (int) (time - h * 3600000 - m * 60000) / 1000;
+                    String t = (h < 10 ? "0" + h : h) + ":" + (m < 10 ? "0" + m : m) + ":" + (s < 10 ? "0" + s : s);
+                    chronometer.setText(t);
+                }
+            });
+            time.setText("00:00:00");
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        if (intent.getStringExtra("startingPoint") != null){
         String[] latLng = intent.getStringExtra("startingPoint").split(",");
         Double lat = Double.parseDouble(latLng[0]);
         Double lng = Double.parseDouble(latLng[1]);
         startingPoint = new Location("");//provider name is unnecessary
         startingPoint.setLatitude(lat);//your coords of course
         startingPoint.setLongitude(lng);
+        }
         share.setVisibility(View.VISIBLE);
         share.setClickable(true);
 
-        //time calculation
-        time.setOnChronometerTickListener(new Chronometer.OnChronometerTickListener() {
-            @Override
-            public void onChronometerTick(Chronometer chronometer) {
-                long time = SystemClock.elapsedRealtime() - chronometer.getBase();
-                int h = (int) (time / 3600000);
-                int m = (int) (time - h * 3600000) / 60000;
-                int s = (int) (time - h * 3600000 - m * 60000) / 1000;
-                String t = (h < 10 ? "0" + h : h) + ":" + (m < 10 ? "0" + m : m) + ":" + (s < 10 ? "0" + s : s);
-                chronometer.setText(t);
-            }
-        });
-        time.setText("00:00:00");
-        startChronometer();
-        startingTime = time.getBase();
+
+
 
         //speed calculation
         receiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 Bundle extras = intent.getExtras();
+                if(intent.hasCategory(INTENT_EXTRA)){
                 if (extras != null) {
                     location = (Location) extras.get(INTENT_EXTRA);
+                }
+
+                if(intent.hasCategory("distance")) {
                     distanceToFinishLine = (Double) extras.getDouble("distance");
                     try {
                         setDistanceToFinishLine(distanceToFinishLine);
                     } catch (JSONException e) {
                         e.printStackTrace();
+                    }
+                }
+                    if(intent.hasCategory("tracking")) {
+                        String tracking = extras.getString("tracking");
+                        if (tracking != null && tracking.equals("stop")) {
+                            stopTracking();
+                        }
                     }
                     currentTime = SystemClock.elapsedRealtime();
                     Log.i("ACTIVITY", "Intent Extra key=" + INTENT_EXTRA + ":" + location);
@@ -218,11 +234,33 @@ public class RaceActivity extends AppCompatActivity {
         startLocationService.putExtra("delay", delay);
         startService(startLocationService);
     }
+    private void startTracking(String startTime) throws ParseException {
+        //the Date and time at which you want to execute
+        DateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        Date date = dateFormatter.parse(startTime);
 
+        //Now create the time and schedule it
+        Timer timer = new Timer();
+
+        //Use this if you want to execute it once
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                new CheckIfOngoing().execute();
+            }
+        }, date);
+    }
 
     public void startChronometer() {
-        time.start();
-        startLocationService();
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                time.setBase(SystemClock.elapsedRealtime());
+                time.start();
+                startingTime = time.getBase();
+                startLocationService();
+            }
+        });
     }
 
     public void stopChronometer() {
@@ -242,9 +280,7 @@ public class RaceActivity extends AppCompatActivity {
         bd = bd.setScale(decimalPlace, BigDecimal.ROUND_HALF_UP);
         return bd;
     }
-    private void updateFinishLineDistance(float distance){
-        this.finishLine.setText(String.valueOf(round(distance,2)));
-    }
+
 
     class RetrieveMap extends AsyncTask<String, Void, Void> {
 
@@ -315,5 +351,102 @@ public class RaceActivity extends AppCompatActivity {
                 }
             });
 
+    }
+
+    public class CheckIfOngoing extends AsyncTask<String, Void, Boolean> {
+
+        @Override
+        protected Boolean doInBackground(String... strings) {
+            HttpURLConnection connection = null;
+            try {
+                URL url = null;
+                String response = null;
+                url = new URL("https://rider-track-dev.herokuapp.com/api/events/" + eventId);
+                //create the connection
+                connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestProperty("Authorization", "JWT " + token);
+                //set the request method to GET
+                connection.setRequestMethod("GET");
+
+                //read in the data from input stream, this can be done a variety of ways
+                int responseCode = connection.getResponseCode();
+                if (responseCode == HttpsURLConnection.HTTP_OK) {
+                    //create your inputsream
+                    String line = "";
+
+                    BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+
+                    StringBuffer sb = new StringBuffer("");
+
+                    while ((line = in.readLine()) != null) {
+
+                        sb.append(line);
+                        break;
+                    }
+
+                    in.close();
+
+                    JSONObject resp = new JSONObject(sb.toString());
+                    JSONObject event = resp.getJSONObject("event");
+                    String status = event.getString("status");
+                    Log.e("Response", status);
+                    if(status.equals("ongoing")){
+                       startChronometer();
+                    }else{
+                        recursiveCheck();
+                    }
+                    return true;
+                }else{
+                    //create your inputsream
+                    String line = "";
+
+                    BufferedReader in = new BufferedReader(new
+                            InputStreamReader(
+                            connection.getErrorStream()));
+
+                    StringBuffer sb = new StringBuffer("");
+
+                    while ((line = in.readLine()) != null) {
+
+                        sb.append(line);
+                        break;
+                    }
+                    Log.e("Response", sb.toString());
+                    in.close();
+                    return true;
+                }
+            } catch (Exception e) {
+
+               Log.e("[RaceActivity]", e.toString());
+                return false;
+
+            } finally {
+                connection.disconnect();
+            }
+        }
+    }
+
+    private void recursiveCheck(){
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                final Handler ha = new Handler();
+                ha.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        new CheckIfOngoing().execute();
+                        Log.e("Event not ", "started");
+                    }
+                }, 5000);
+            }
+        });
+    }
+
+    private void stopTracking(){
+        stopChronometer();
+        Intent eventsList = new Intent(getApplicationContext(), EventsListActivity.class);
+        eventsList.putExtra("userId", userId);
+        eventsList.putExtra("token", token);
+        startActivity(eventsList);
     }
 }

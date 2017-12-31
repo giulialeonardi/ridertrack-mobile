@@ -42,7 +42,7 @@
         android:orientation="horizontal"
         android:layout_marginBottom="20dp">
         <Button
-            android:id="@+id/timeout_5"
+            android:id="@+id/timeout_2"
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="60dp"
@@ -53,7 +53,7 @@
             android:background="@color/pink"
             android:textColor="@color/darker_red"/>
         <Button
-            android:id="@+id/timeout_10"
+            android:id="@+id/timeout_3"
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="60dp"
@@ -68,7 +68,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="20dp">
         <Button
-            android:id="@+id/timeout_15"
+            android:id="@+id/timeout_5"
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="60dp"
@@ -79,7 +79,7 @@
             android:background="@color/pink"
             android:textColor="@color/darker_red"/>
         <Button
-            android:id="@+id/timeout_20"
+            android:id="@+id/timeout_10"
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="60dp"
@@ -93,7 +93,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
         <Button
-            android:id="@+id/timeout_25"
+            android:id="@+id/timeout_20"
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="60dp"

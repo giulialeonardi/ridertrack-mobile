@@ -310,7 +310,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         @Override
         protected Boolean doInBackground(String... params) {
-            // TODO: attempt authentication against a network service.
             try {
                 URL url = new URL("https://rider-track-dev.herokuapp.com/api/auth/login");
                 JSONObject postDataParams = new JSONObject();

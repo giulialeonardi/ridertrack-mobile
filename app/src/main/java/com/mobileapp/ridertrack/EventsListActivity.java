@@ -4,20 +4,18 @@ package com.mobileapp.ridertrack;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
-import android.content.BroadcastReceiver;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.location.Location;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.SystemClock;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -28,7 +26,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.TextView;
-import android.widget.Toast;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -38,8 +35,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import javax.net.ssl.HttpsURLConnection;
-
-import static com.mobileapp.ridertrack.LocationService.Constants.INTENT_EXTRA;
 
 public class EventsListActivity extends AppCompatActivity {
 
@@ -62,7 +57,7 @@ public class EventsListActivity extends AppCompatActivity {
         Intent intent = getIntent();
         userId = intent.getStringExtra("userId");
         token = intent.getStringExtra("token");
-        delay = intent.getIntExtra("delay", 10);
+        delay = intent.getIntExtra("delay", 5);
         SharedPreferences sp=getSharedPreferences("Login", MODE_PRIVATE);
         SharedPreferences.Editor Ed=sp.edit();
         Ed.putString("delay", String.valueOf(delay));
@@ -157,9 +152,52 @@ public class EventsListActivity extends AppCompatActivity {
                     eventsList = new ArrayList<>();
                     splitResponse(sb);
                     Log.e("Number of events", String.valueOf(eventsList.size()));
-                    for(Event event : eventsList){
+                    for (Event event : eventsList) {
                         Log.e("Event name", event.getName() + "(id: " + event.getId() + ")");
                     }
+                    return true;
+                }if (responseCode == HttpsURLConnection.HTTP_UNAUTHORIZED){
+                    Log.e("Sono", "qui");
+                    String line = "";
+
+                    BufferedReader in = new BufferedReader(new
+                            InputStreamReader(
+                            connection.getErrorStream()));
+
+                    StringBuffer sb = new StringBuffer("");
+
+                    while ((line = in.readLine()) != null) {
+
+                        sb.append(line);
+                        break;
+                    }
+                    Log.e("Response", sb.toString());
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            final Dialog dialog = new Dialog(EventsListActivity.this);
+                            dialog.setContentView(R.layout.popup_error);
+                            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                            Button close = (Button) dialog.findViewById(R.id.close);
+                            close.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    dialog.dismiss();
+                                    SharedPreferences sp = getSharedPreferences("Login", MODE_PRIVATE);
+                                    SharedPreferences.Editor Ed = sp.edit();
+                                    Ed.putString("userId", null);
+                                    Ed.putString("token", null);
+                                    Ed.putString("delay", null);
+                                    Ed.commit();
+                                    Intent main = new Intent(getApplicationContext(), MainActivity.class);
+                                    startActivity(main);
+                                    finish();
+                                }
+                            });
+                            dialog.show();
+                        }
+                        });
+                    in.close();
                     return true;
                 }else{
                     //create your inputsream
@@ -178,8 +216,6 @@ public class EventsListActivity extends AppCompatActivity {
                         break;
                     }
                     Log.e("Response", sb.toString());
-                    //TODO: add error message
-                    //["jwt expired"]
                     in.close();
                     return true;
                 }
@@ -225,7 +261,6 @@ public class EventsListActivity extends AppCompatActivity {
                     }
 
                     extractStartingPoint(sb, strings[0]);
-                    scrollView.setClickable(true);
                     in.close();
                     return true;
                 }else{
@@ -248,6 +283,7 @@ public class EventsListActivity extends AppCompatActivity {
             } catch (Exception e) {
 
                 longInfo(e.toString());
+                Log.e("EventsList", "Sono qui");
                 return false;
 
             } finally {
@@ -299,7 +335,8 @@ public class EventsListActivity extends AppCompatActivity {
     private void extractStartingPoint(StringBuffer sb, String eventId) throws JSONException {
         JSONObject response = new JSONObject(sb.toString());
         JSONArray coord = response.getJSONArray("coordinates");
-        if(coord.getJSONObject(0) != null) {
+        Log.e("Coordinates", coord.toString());
+        if(!coord.toString().equals("[]")) {
             JSONObject jObject = coord.getJSONObject(0);
             String latLng = null;
             if (jObject.has("lat") && jObject.has("lng")) {
@@ -308,12 +345,7 @@ public class EventsListActivity extends AppCompatActivity {
                 latLng = lat + "," + lng;
                 findEventFromID(eventId).setStartingPoint(latLng);
                 Log.e("EventsListActivity", " StartingPoint set");
-
-            } else {
-                //TODO: error message: wrong coordinates
             }
-        }else{
-            //TODO: error message: no coordinates
         }
     }
 
@@ -433,6 +465,7 @@ public class EventsListActivity extends AppCompatActivity {
                     raceActivity.putExtra("delay", delay);
                     raceActivity.putExtra("name", findEventNameFromID(event.getTag().toString()));
                     raceActivity.putExtra("startingPoint", findEventStartingPointFromID(event.getTag().toString()));
+                    raceActivity.putExtra("startingTime", findEventStartingTimeFromID(event.getTag().toString()));
                     Log.e("Event tag ", event.getTag().toString());
                     startActivity(raceActivity);
                     finish();
@@ -503,10 +536,26 @@ public class EventsListActivity extends AppCompatActivity {
         for (Event event : eventsList) {
             if (event.getId().equals(eventId)) {
                 latLng = event.getStartingPoint();
-                Log.e("findStartingPointFromID", latLng);
             }
         }
         return latLng;
+    }
+    private String findEventStartingTimeFromID(String eventId) {
+        String time = "";
+        String date = "";
+        String startingTime = "";
+        for (Event event : eventsList) {
+            if (event.getId().equals(eventId)) {
+                time = event.getStartingTime()+":00";
+                String[] splitted = event.getStartingDate().split("/");
+                String day = splitted[0];
+                String month = splitted[1];
+                String year = splitted[2];
+                date = year + "-" + month + "-" + day;
+                startingTime = date + " " + time;
+            }
+        }
+        return startingTime;
     }
 
 
