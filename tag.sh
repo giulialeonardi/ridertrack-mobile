@@ -4,7 +4,7 @@ if [ "$TRAVIS_BRANCH" = "master" -a "$TRAVIS_PULL_REQUEST" = "false" ]; then
   git config --global user.email "caprarelli.alessandro@gmail.com"
   git config --global user.name "Alessandro Caprarelli"
 
-  git remote add release "https://${GH_TOKEN}@github.com/zurfyx/travis-android.git"
+  git remote add release "https://${GH_TOKEN}@github.com/giulialeonardi/ridertrack-mobile.git"
 
   git push -d release latest
   git tag -d latest
