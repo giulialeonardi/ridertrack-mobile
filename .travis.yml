@@ -1,47 +1,48 @@
-sudo: false
+sudo: required
 
 language: android
 jdk: oraclejdk8
 
-android:
-  components:
-  -  tools
-  - platform-tools
-  - build-tools-26.0.2
-  - android-26
-  - extra-google-m2repository
-  - extra-android-m2repository
-
-before_install:
-- chmod +x gradlew
-
-script:
-- "./gradlew clean build connectedAndroidTest -PdisablePreDex --stacktrace"
-
-notifications:
-  email: true
-
 before_cache:
-- rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -rf $HOME/.gradle/caches/*/plugin-resolution/
 
 cache:
   directories:
-  - "$HOME/.m2"
-  - "$HOME/.gradle"
-  - "$HOME/.gradle/caches/"
-  - "$HOME/.gradle/wrapper/"
+  - $HOME/.gradle/caches/
+  - $HOME/.gradle/wrapper/
+  - $HOME/.android/build-cache
 
-after_success:
-- sh set_tags.sh
+env:
+  global:
+  - ANDROID_API=26
+  - ANDROID_BUILD_TOOLS=26.0.2
+  - ADB_INSTALL_TIMEOUT=5 # Minutes.
+  - secure: D02g40YkG88ap7UqitE+LMGhUA+HMb9ON3V+RS8GdSn039iA/cmafi8R9GA10rd38Ytwe94jO0aopGyPhYkg7GgeFl4ynmCEkWIBncJSc53iuW3y+iX2XijfTyvZhuTBNV1EErVcDnAw0xu9cJ9Cnsjkyfl9pZ9H/WfS4TiRwISdH60OLJhqKZhEq2JHwF6lUmGLjPe5cG+tA7dmv8+ZoQBWMo5t+iT6Wd3tICGR4PAJz7qm6nah4P9tyjyq3c2zGopntrp02X3ua017WN3/AjQD9VPRD0hpsxik9jCIlOHnXM0v9UJ7GTXn+dJBrD7Ek+Rex7rToNIwm0zeJeobHX++45rFCcHUUUPM4QRmyAyuf6iU047l/TSZa2ATWhxoeBk9YBA8AzPO+xdmKPTGLU/T9ee3xEWUi2U81U5PYhOxB2IXimWYX46H2fSgGUT30dG5xsfZM6fYjvNQ9NHsxI2AaKKntlXLhwoFG5MA4mb57jgoE3U3i4B8+/vuwgJSMfdWtH9WMT/QMAo2Oc6HQwRpKRtiUAqF1EO1Q/EWgNe9HIsmvtfP8zTN8s+XlBaI9yKHlgyJxW8lFV1G8RS1dvBxZulJYXlFyYWhdeyf74CmCl6sWiNGQ3WjDvo+glfuoIEYQ4siiBmyEjlO/4RiqodVFYQwhCryCSEMGZVgkgI= # github token without variable
+  - secure: REIhaTqGMZx7/NOP25i8q9BLzYbrVOweOJq7N7RLFGtFfCXZuCcPAyyN/PmLMX8IxKb1sPsz6ENlepYrgFLZg8pVzE0NY7Wf+m7yZ21kXKv5lKX4y0b5ophCR2U6FOa2AQ3IQng7JIx6azkKEWplnjro76nFtWGyXRVKaKDeLk+0GJShAl7g/YU9/9Suldl52l8qR7yMIPF1oUBOkH19laYHcjYL51lY2coVNbg3NzHv7dxv57fwrEGvDEF55lhG/ZxHSbqgUjTmSqdfAKZLIYvI3iBLv8BEHQWoamNvK4V8tu3vSoo3bXJlPL6ichLIXYX95INK2AJM7P+ok9rPlPrF0Cg/cN/jzukVjTszdJ4gHVHfM1+RwgNjM2a+KxQaLaKmN+OhbSCUZABU+Wf0fzK7Tfy0cpVdt6Y2cUobYPtRYeuC+Fv81Cz9KW64/lCsIWVWNWd/c9mB9QvGmXH0w1EToIvlNqlP8LLcQLYS3MPVVi7xkWmHKiX4LO0PfIAS3s1TeRCkg0h6iPVskzl7aLsT1dru1PBBCoqyCY5sgiPpbK9YvpE1tTIIwDebJGVN5L+ZB+c4u6DEjpCYhCN/M0MvWCKJV7NBhiV3DeKtjaV3kTw9SKANZUkkakhm2/iiX8+7ctoaxYpDIdlzpSnFkQYQlxKUYyMwDL3DKSTm1dQ= #GH_TOKEN=token...
+
+android:
+  components:
+  - tools
+  - tools # Running this twice get's the latest build tools (https://github.com/codepath/android_guides/wiki/Setting-up-Travis-CI)
+  - platform-tools
+  - android-${ANDROID_API}
+  - build-tools-${ANDROID_BUILD_TOOLS}
+  - extra
+
+script:
+- "./gradlew clean build"
+
+before_deploy:
+- cd -
+- scripts/tag.sh
 
 deploy:
   provider: releases
-  api_key:
-    secure: "SBUJLR7ne4Hf5GsvcGHdd5S1rn29RblLUp6DFyhGOm+wcXqFTj2p9GeG7hHlhp4Cle/yNxYlusM+ZhF9Iz6CAjuQgxsISrBAQR4Y3iqoVWVlu67Qw5j8Wb7MWeEgXeiWu9yCVzFkABcd8RBKYVccj505cJZgHlwEA1ozXfaW8cnLd7z4LePLmmfDTyxVp2qakmnE3lH9JWo1seF6P0K9F3fG7yiUJ7X9QqvQK9tubvbkuouF8L9jUf37rdFlAp2d4fqNzOiEfgwSFizO8ZbBq/RGjP7Q/NRQ1vMGKaPciK8xSMg8QEMpkytf+QHhbfgIeb2flkSLCoUlErrjIkNMXUDFsTQspKhSfTE5wWMkpdDeQEjAJFFiaeYDF1MzIXsybKbCD06RA0PrjSy9dnc8qaU4G+DOPUljlibJbnVtj1d/po+ym8wo+9xUfe+fjbImb4V2NM5wLwHRDyVLAOX7hP9j2fCsr1wjRPsOSCmYMe2xZGZW1eorlBGYlIQhWtMARcTUrCL7fYnsFQsIe4MvawuqlC7kOPDf5uoJWKszwFL9HJs6Kf9Qnvz8OsEdTF2+A9jeNiGkIzGB+RbZazC8hhfbi+ZJlFCH3Q0ySWGRk/vD8miUiQRqwDBYfe6SqL+B4oihlQg3HAtlAzs2ZqapEeCn2sF0B9yVIJYrn+tWbkc="
-  file: "yourapp/build/outputs/apk/yourapp*release*.apk"
-  file_glob: "true"
-  skip_cleanup: true
   on:
     branch: master
-    repo: giulialeonardi/ridertrack-mobile
-    tags: false
+  api_key:
+    secure: "D02g40YkG88ap7UqitE+LMGhUA+HMb9ON3V+RS8GdSn039iA/cmafi8R9GA10rd38Ytwe94jO0aopGyPhYkg7GgeFl4ynmCEkWIBncJSc53iuW3y+iX2XijfTyvZhuTBNV1EErVcDnAw0xu9cJ9Cnsjkyfl9pZ9H/WfS4TiRwISdH60OLJhqKZhEq2JHwF6lUmGLjPe5cG+tA7dmv8+ZoQBWMo5t+iT6Wd3tICGR4PAJz7qm6nah4P9tyjyq3c2zGopntrp02X3ua017WN3/AjQD9VPRD0hpsxik9jCIlOHnXM0v9UJ7GTXn+dJBrD7Ek+Rex7rToNIwm0zeJeobHX++45rFCcHUUUPM4QRmyAyuf6iU047l/TSZa2ATWhxoeBk9YBA8AzPO+xdmKPTGLU/T9ee3xEWUi2U81U5PYhOxB2IXimWYX46H2fSgGUT30dG5xsfZM6fYjvNQ9NHsxI2AaKKntlXLhwoFG5MA4mb57jgoE3U3i4B8+/vuwgJSMfdWtH9WMT/QMAo2Oc6HQwRpKRtiUAqF1EO1Q/EWgNe9HIsmvtfP8zTN8s+XlBaI9yKHlgyJxW8lFV1G8RS1dvBxZulJYXlFyYWhdeyf74CmCl6sWiNGQ3WjDvo+glfuoIEYQ4siiBmyEjlO/4RiqodVFYQwhCryCSEMGZVgkgI="
+  file: "app/build/outputs/apk/release/TravisAndroid.apk"
+  overwrite: true
+  skip_cleanup: true
