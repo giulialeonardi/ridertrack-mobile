@@ -72,7 +72,6 @@ public class RaceActivity extends AppCompatActivity {
     private String startTime;
     private String city;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
