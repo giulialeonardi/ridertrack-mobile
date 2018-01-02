@@ -35,7 +35,7 @@ script:
 
 before_deploy:
 - cd -
-- scripts/tag.sh
+- tag.sh
 
 deploy:
   provider: releases
