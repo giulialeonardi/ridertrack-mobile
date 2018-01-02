@@ -16,7 +16,7 @@
     <string name="error_sign_in_first">UPS...couldn\'t sign in</string>
     <string name="error_sign_in_second">Your email and password don\'t match.\n Please, try again.</string>
     <string name="try_again">Try again</string>
-    <string name="share">Share status</string>
+    <string name="share">Share on Facebook</string>
     <string name="time">Time</string>
     <string name="speed">Speed</string>
     <string name="finish_line">Finish Line</string>
@@ -41,6 +41,8 @@
     <string name="go_website">List of events</string>
     <string name="error_expired">Your authorization is expired. Please, login again.</string>
     <string name="ok">OK</string>
+    <string name="not_started">The event has not started yet</string>
+    <string name="started">Event started: you\'re sharing your position</string>
 
     <string name="permission_rationale">"Contacts permissions are needed for providing email
         completions."

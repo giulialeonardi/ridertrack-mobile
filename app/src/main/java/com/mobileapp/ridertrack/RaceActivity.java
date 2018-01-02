@@ -70,7 +70,7 @@ public class RaceActivity extends AppCompatActivity {
     private ShareDialog shareDialog;
     private Double distanceToFinishLine;
     private String startTime;
-
+    private String city;
 
 
     @Override
@@ -93,6 +93,7 @@ public class RaceActivity extends AppCompatActivity {
         eventId = intent.getStringExtra("eventId");
         delay = intent.getIntExtra("delay", 5);
         name = intent.getStringExtra("name");
+        city = intent.getStringExtra("city");
         startTime = intent.getStringExtra("startingTime");
         try {
             startTracking(startTime);
@@ -290,10 +291,15 @@ public class RaceActivity extends AppCompatActivity {
             if(location != null) {
                 string = "http://maps.googleapis.com/maps/api/staticmap?&zoom=16&size=800x400&maptype=roadmap&sensor=true&center=" + location.getLatitude() + "," + location.getLongitude() +
                         "&markers=color:red|" + location.getLatitude() + "," + location.getLongitude();
-            }else{
-                string = "http://maps.googleapis.com/maps/api/staticmap?&zoom=16&size=800x400&maptype=roadmap&sensor=true&center=" +
-                        startingPoint.getLatitude() + "," + startingPoint.getLongitude() +
-                        "&markers=color:red|" + startingPoint.getLatitude() + "," + startingPoint.getLongitude();
+            }else {
+                if (startingPoint != null) {
+                    string = "http://maps.googleapis.com/maps/api/staticmap?&zoom=16&size=800x400&maptype=roadmap&sensor=true&center=" +
+                            startingPoint.getLatitude() + "," + startingPoint.getLongitude() +
+                            "&markers=color:red|" + startingPoint.getLatitude() + "," + startingPoint.getLongitude();
+                }else{
+                    string = "http://maps.googleapis.com/maps/api/staticmap?&zoom=16&size=800x400&maptype=roadmap&sensor=true&center=" + city +
+                            "&markers=color:red|" + city;
+                }
             }
             URL url = null;
             HttpURLConnection connection = null;
@@ -319,7 +325,7 @@ public class RaceActivity extends AppCompatActivity {
 // Create an object
             ShareOpenGraphObject object = new ShareOpenGraphObject.Builder()
                     .putString("og:type", "fitness.course")
-                    .putString("og:url","https://rider-track-dev.herokuapp.com/api/events/"+eventId)
+                    .putString("og:url","https://rider-track-dev.herokuapp.com/events/"+eventId)
                     .putString("og:image", string)
                     .putString("og:description",
                             "Hey, there! I'm competing in "+name+". Track me on Ridertrack.")
@@ -361,7 +367,7 @@ public class RaceActivity extends AppCompatActivity {
             try {
                 URL url = null;
                 String response = null;
-                url = new URL("https://rider-track-dev.herokuapp.com/api/events/" + eventId);
+                url = new URL("https://rider-track-dev.herokuapp.com/api/events/"+ eventId);
                 //create the connection
                 connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestProperty("Authorization", "JWT " + token);
@@ -392,6 +398,8 @@ public class RaceActivity extends AppCompatActivity {
                     Log.e("Response", status);
                     if(status.equals("ongoing")){
                        startChronometer();
+                       TextView stat = findViewById(R.id.status);
+                       stat.setText(R.string.started);
                     }else{
                         recursiveCheck();
                     }

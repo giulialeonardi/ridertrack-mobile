@@ -33,7 +33,11 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+
 import javax.net.ssl.HttpsURLConnection;
 
 public class EventsListActivity extends AppCompatActivity {
@@ -47,13 +51,14 @@ public class EventsListActivity extends AppCompatActivity {
     private String logoData;
     private int delay;
     private LinearLayout scrollView;
+    private int counter;
 
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_eventslist);
-
+        counter = 0;
         Intent intent = getIntent();
         userId = intent.getStringExtra("userId");
         token = intent.getStringExtra("token");
@@ -62,7 +67,6 @@ public class EventsListActivity extends AppCompatActivity {
         SharedPreferences.Editor Ed=sp.edit();
         Ed.putString("delay", String.valueOf(delay));
         Ed.commit();
-        Log.e("[EventsListActivity]", String.valueOf(delay));
         mProgressView = findViewById(R.id.login_progress);
         mListView = findViewById(R.id.list);
         showProgress(true);
@@ -133,7 +137,6 @@ public class EventsListActivity extends AppCompatActivity {
                 int responseCode = connection.getResponseCode();
                 if (responseCode == HttpsURLConnection.HTTP_OK) {
                     //create your inputsream
-                    Log.e("[EventsListActivity]", "input stream if");
                     String line = "";
 
                     BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
@@ -147,17 +150,11 @@ public class EventsListActivity extends AppCompatActivity {
                     }
 
                     in.close();
-                    Log.e("Empty list", sb.toString());
-
                     eventsList = new ArrayList<>();
                     splitResponse(sb);
                     Log.e("Number of events", String.valueOf(eventsList.size()));
-                    for (Event event : eventsList) {
-                        Log.e("Event name", event.getName() + "(id: " + event.getId() + ")");
-                    }
                     return true;
                 }if (responseCode == HttpsURLConnection.HTTP_UNAUTHORIZED){
-                    Log.e("Sono", "qui");
                     String line = "";
 
                     BufferedReader in = new BufferedReader(new
@@ -171,7 +168,6 @@ public class EventsListActivity extends AppCompatActivity {
                         sb.append(line);
                         break;
                     }
-                    Log.e("Response", sb.toString());
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -201,7 +197,6 @@ public class EventsListActivity extends AppCompatActivity {
                     return true;
                 }else{
                     //create your inputsream
-                    Log.e("[EventsListActivity]", "input stream else");
                     String line = "";
 
                     BufferedReader in = new BufferedReader(new
@@ -215,7 +210,6 @@ public class EventsListActivity extends AppCompatActivity {
                         sb.append(line);
                         break;
                     }
-                    Log.e("Response", sb.toString());
                     in.close();
                     return true;
                 }
@@ -278,12 +272,11 @@ public class EventsListActivity extends AppCompatActivity {
                         break;
                     }
                     in.close();
-                    return true;
+                    return false;
                 }
             } catch (Exception e) {
 
                 longInfo(e.toString());
-                Log.e("EventsList", "Sono qui");
                 return false;
 
             } finally {
@@ -301,7 +294,7 @@ public class EventsListActivity extends AppCompatActivity {
             Log.i("Exception", str);
     }
 
-    private void splitResponse(StringBuffer sb) throws JSONException {
+    private void splitResponse(StringBuffer sb) throws JSONException, ParseException {
         JSONObject response = new JSONObject(sb.toString());
         JSONArray events = response.getJSONArray("events");
         if (events.length() == 0) {
@@ -327,7 +320,6 @@ public class EventsListActivity extends AppCompatActivity {
                 JSONObject jObject = events.getJSONObject(i);
                 manageEvent(jObject);
             }
-
             inflateLayout();
         }
     }
@@ -335,7 +327,6 @@ public class EventsListActivity extends AppCompatActivity {
     private void extractStartingPoint(StringBuffer sb, String eventId) throws JSONException {
         JSONObject response = new JSONObject(sb.toString());
         JSONArray coord = response.getJSONArray("coordinates");
-        Log.e("Coordinates", coord.toString());
         if(!coord.toString().equals("[]")) {
             JSONObject jObject = coord.getJSONObject(0);
             String latLng = null;
@@ -344,18 +335,16 @@ public class EventsListActivity extends AppCompatActivity {
                 String lng = jObject.getString("lng");
                 latLng = lat + "," + lng;
                 findEventFromID(eventId).setStartingPoint(latLng);
-                Log.e("EventsListActivity", " StartingPoint set");
+                counter = counter + 1;
             }
         }
     }
 
-    private void manageEvent(JSONObject jObject) throws JSONException {
+    private void manageEvent(JSONObject jObject) throws JSONException, ParseException {
         Event event = new Event();
-        eventsList.add(event);
         if(jObject.has("_id")){
             String id = jObject.getString("_id");
             event.setId(id);
-            new GetStartingPoint().execute(id);}
         if(jObject.has("name")){
             String name = jObject.getString("name");
             event.setName(name);}
@@ -410,69 +399,94 @@ public class EventsListActivity extends AppCompatActivity {
         if(jObject.has("updated_at")){
             String updated_at = jObject.getString("updated_at");
             event.setUpdatedAt(updated_at);}
+            if(!event.getStatus().equals("passed")){
+                eventsList.add(event);
+                new GetStartingPoint().execute(id);}
+        }
+
     }
 
     private void inflateLayout() throws JSONException {
-        scrollView = (LinearLayout) findViewById(R.id.scroll_down);
-        LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                showProgress(false);
-            }
-        });
-        for (int i = 0; i < eventsList.size(); i++) {
-            //Creating copy of event box by inflating it
-            final LinearLayout event = (LinearLayout) inflater.inflate(R.layout.event_box, null);
-            event.setClickable(false);
-            event.setTag(eventsList.get(i).getId());
-            TextView title = event.findViewById(R.id.event_name);
-            title.setText(eventsList.get(i).getName());
-            TextView city = event.findViewById(R.id.location);
-            city.setText(eventsList.get(i).getCity());
-            TextView date = event.findViewById(R.id.date);
-            date.setText(eventsList.get(i).getStartingDate());
-            TextView type = event.findViewById(R.id.type);
-            type.setText(eventsList.get(i).getType());
-            TextView length = event.findViewById(R.id.length);
-            length.setText(String.valueOf(eventsList.get(i).getLength()));
-            ImageView logo = event.findViewById(R.id.event_image);
-            logoData = eventsList.get(i).getLogo().substring(eventsList.get(i).getLogo().indexOf("["), eventsList.get(i).getLogo().indexOf("]")+2).replace(" ", "");
-            JSONArray arr = new JSONArray(logoData);
-            byte[] myArray = new byte[logoData.length()];
-            for (int j = 0; j < arr.length(); j++) {
-                myArray[j] = (byte) arr.getInt(j);
-            }
-            Bitmap bmp = BitmapFactory.decodeByteArray(myArray, 0, myArray.length);
-            logo.setImageBitmap(bmp);
-            LinearLayout event_box = findViewById(R.id.event_box);
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(event_box.getLayoutParams());
-            params.setMargins(10, 20, 10, 20);
-            event.setLayoutParams(params);
+        if(eventsList.size() == 0){
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    scrollView.addView(event);
+                    showProgress(false);
+                    TextView noEvents = findViewById(R.id.no_events);
+                    Button goWeb = findViewById(R.id.go_website);
+                    noEvents.setVisibility(View.VISIBLE);
+                    goWeb.setVisibility(View.VISIBLE);
+                    goWeb.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://rider-track-dev.herokuapp.com/events"));
+                            startActivity(browserIntent);
+                        }
+                    });
                 }
             });
-            event.setOnClickListener(new View.OnClickListener() {
+        }else {
+            scrollView = (LinearLayout) findViewById(R.id.scroll_down);
+            LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            runOnUiThread(new Runnable() {
                 @Override
-                public void onClick(View view) {
-                    Intent raceActivity = new Intent(getApplicationContext(), RaceActivity.class);
-                    raceActivity.putExtra("userId", userId);
-                    raceActivity.putExtra("token", token);
-                    raceActivity.putExtra("eventId", event.getTag().toString());
-                    raceActivity.putExtra("delay", delay);
-                    raceActivity.putExtra("name", findEventNameFromID(event.getTag().toString()));
-                    raceActivity.putExtra("startingPoint", findEventStartingPointFromID(event.getTag().toString()));
-                    raceActivity.putExtra("startingTime", findEventStartingTimeFromID(event.getTag().toString()));
-                    Log.e("Event tag ", event.getTag().toString());
-                    startActivity(raceActivity);
-                    finish();
+                public void run() {
+                    showProgress(false);
                 }
             });
+            for (int i = 0; i < eventsList.size(); i++) {
+                //Creating copy of event box by inflating it
+                final LinearLayout event = (LinearLayout) inflater.inflate(R.layout.event_box, null);
+                event.setClickable(false);
+                event.setTag(eventsList.get(i).getId());
+                TextView title = event.findViewById(R.id.event_name);
+                title.setText(eventsList.get(i).getName());
+                TextView city = event.findViewById(R.id.location);
+                city.setText(eventsList.get(i).getCity());
+                TextView date = event.findViewById(R.id.date);
+                date.setText(eventsList.get(i).getStartingDate());
+                TextView time = event.findViewById(R.id.time);
+                time.setText(eventsList.get(i).getStartingTime());
+                TextView type = event.findViewById(R.id.type);
+                String typeLowercase = eventsList.get(i).getType();
+                String typeUppercase = typeLowercase.substring(0,1).toUpperCase() + typeLowercase.substring(1);
+                type.setText(typeUppercase);
+                ImageView logo = event.findViewById(R.id.event_image);
+                logoData = eventsList.get(i).getLogo().substring(eventsList.get(i).getLogo().indexOf("["), eventsList.get(i).getLogo().indexOf("]") + 2).replace(" ", "");
+                JSONArray arr = new JSONArray(logoData);
+                byte[] myArray = new byte[logoData.length()];
+                for (int j = 0; j < arr.length(); j++) {
+                    myArray[j] = (byte) arr.getInt(j);
+                }
+                Bitmap bmp = BitmapFactory.decodeByteArray(myArray, 0, myArray.length);
+                logo.setImageBitmap(bmp);
+                LinearLayout event_box = findViewById(R.id.event_box);
+                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(event_box.getLayoutParams());
+                params.setMargins(10, 20, 10, 20);
+                event.setLayoutParams(params);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        scrollView.addView(event);
+                    }
+                });
+                event.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        Intent raceActivity = new Intent(getApplicationContext(), RaceActivity.class);
+                        raceActivity.putExtra("userId", userId);
+                        raceActivity.putExtra("token", token);
+                        raceActivity.putExtra("eventId", event.getTag().toString());
+                        raceActivity.putExtra("delay", delay);
+                        raceActivity.putExtra("name", findEventNameFromID(event.getTag().toString()));
+                        raceActivity.putExtra("city", findEventCityFromID(event.getTag().toString()));
+                        raceActivity.putExtra("startingPoint", findEventStartingPointFromID(event.getTag().toString()));
+                        raceActivity.putExtra("startingTime", findEventStartingTimeFromID(event.getTag().toString()));
+                        startActivity(raceActivity);
+                    }
+                });
+            }
         }
-        longInfo(logoData);
     }
     /**
      * Shows the progress UI and hides the login form.
@@ -557,7 +571,16 @@ public class EventsListActivity extends AppCompatActivity {
         }
         return startingTime;
     }
+    private String findEventCityFromID(String eventId) {
+        String city = "";
 
+        for (Event event : eventsList) {
+            if (event.getId().equals(eventId)) {
+                city = event.getCity();
+            }
+        }
+        return city;
+    }
 
 }
 

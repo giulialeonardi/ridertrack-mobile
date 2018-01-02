@@ -92,7 +92,6 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="10dp"
         android:layout_marginEnd="10dp"
-        android:layout_marginTop="10dp"
         android:layout_marginBottom="10dp">
 
         <LinearLayout
@@ -186,14 +185,14 @@
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
-                            android:src="@drawable/type"
+                            android:src="@drawable/time"
                             android:scaleType="fitCenter"/>
 
                         <TextView
-                            android:id="@+id/type"
+                            android:id="@+id/time"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Running"
+                            android:text="10:00"
                             android:layout_marginStart="10dp"/>
                     </LinearLayout>
                     <LinearLayout
@@ -205,11 +204,11 @@
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
-                            android:src="@drawable/length"
+                            android:src="@drawable/type"
                             android:scaleType="fitCenter"/>
 
                         <TextView
-                            android:id="@+id/length"
+                            android:id="@+id/type"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="21 km"

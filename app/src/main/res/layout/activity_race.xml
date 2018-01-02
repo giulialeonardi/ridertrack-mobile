@@ -3,7 +3,17 @@
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/aquamarine">
-
+<TextView
+    android:id="@+id/status"
+    android:layout_width="match_parent"
+    android:layout_height="0dp"
+    android:layout_weight="1"
+    android:text="@string/not_started"
+    android:textColor="@color/aquamarine"
+    android:background="@color/acquamarine_light"
+    android:gravity="center"
+    android:textSize="20dp"
+    />
     <TextView
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -13,8 +23,7 @@
         android:gravity="center"
         android:textAllCaps="true"
         android:textSize="30sp"
-        android:textStyle="bold|italic"
-        android:layout_marginTop="20dp"/>
+        android:textStyle="bold|italic" />
     <Chronometer
         android:id="@+id/time"
         android:layout_width="match_parent"
