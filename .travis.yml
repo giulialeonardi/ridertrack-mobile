@@ -32,6 +32,8 @@ android:
 
 script:
 - "./gradlew clean build"
+before_install:
+  - chmod +x tag.sh
 
 before_deploy:
 - ./tag.sh
