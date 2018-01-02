@@ -389,7 +389,6 @@ public class RaceActivity extends AppCompatActivity {
                         sb.append(line);
                         break;
                     }
-
                     in.close();
 
                     JSONObject resp = new JSONObject(sb.toString());
