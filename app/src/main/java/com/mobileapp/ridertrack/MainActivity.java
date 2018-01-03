@@ -63,15 +63,6 @@ public class MainActivity extends AppCompatActivity  {
                 }
             });
 
-            //temporary:just to see error screen
-        /*googleButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent emailLogin = new Intent(getApplicationContext(), ErrorActivity.class);
-                startActivity(emailLogin);
-            }
-        });*/
-            //temporary:just to see race screen
             facebookButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {

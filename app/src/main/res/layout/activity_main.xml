@@ -29,7 +29,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="2"
+        android:layout_weight="1"
         android:layout_marginHorizontal="50dp"
         android:layout_marginBottom="30dp"
         android:orientation="vertical">
@@ -38,13 +38,14 @@
             android:id="@+id/email_sign_in_button"
             style="?android:textAppearanceSmall"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:layout_marginTop="16dp"
+            android:layout_height="80dp"
             android:text="@string/email_action_sign_in"
             android:textStyle="bold"
+            android:layout_marginTop="60dp"
             android:textAllCaps="true"
-            android:textSize="20dip"
+            android:textSize="20sp"
+            android:gravity="center"
+            android:layout_gravity="center_vertical"
             android:textColor="@color/white"
             android:backgroundTint="@color/aquamarine"
         />
@@ -61,7 +62,8 @@
             android:textAllCaps="true"
             android:textColor="@color/white"
             android:backgroundTint="@color/blue"
-            android:drawableStart="@drawable/facebook" />
+            android:drawableStart="@drawable/facebook"
+            android:visibility="gone"/>
 
         <Button
             android:id="@+id/google_sign_in_button"
@@ -76,6 +78,7 @@
             android:backgroundTint="@color/red"
             android:text="@string/google_action_sign_in"
             android:drawableStart="@drawable/google"
+            android:visibility="gone"
         />
 
     </LinearLayout>

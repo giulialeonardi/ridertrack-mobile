@@ -43,7 +43,7 @@
     <string name="ok">OK</string>
     <string name="not_started">The event has not started yet</string>
     <string name="started">Event started: you\'re sharing your position</string>
-
+    <string name="click_event">Click on an event to start the tracking</string>
 
     <string name="permission_rationale">"Contacts permissions are needed for providing email
         completions."

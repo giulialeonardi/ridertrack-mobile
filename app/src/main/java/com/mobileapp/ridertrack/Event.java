@@ -1,7 +1,10 @@
 package com.mobileapp.ridertrack;
 
 
-
+/**
+ * Object Event.
+ * It contains all the fields concerning an event, and getters and setters methods.
+ */
 public class Event {
 
     private String id;
