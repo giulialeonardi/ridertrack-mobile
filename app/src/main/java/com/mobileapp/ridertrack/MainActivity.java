@@ -17,23 +17,26 @@ import android.widget.EditText;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 
-
+/**
+ * MainActivity is the activity called by the launcher every time Ridertrack application is opened.
+ * It displays the "Login" button, which redirects user to LoginActivity.
+ */
 public class MainActivity extends AppCompatActivity  {
-
-    private Button emailButton;
-    private Button facebookButton;
-    private Button googleButton;
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        /*
+         * Retrieving information about user
+         */
         SharedPreferences sp1=this.getSharedPreferences("Login", MODE_PRIVATE);
         String userId=sp1.getString("userId", null);
         String token = sp1.getString("token", null);
         String delay = sp1.getString("delay", null);
-        // recovering the instance state
+        /*
+         * If user has already logged in Ridertrack application at least once, and not logged out after the last use,
+         * he/she is not asked to login again and is directly redirected to EventsListActivity
+         */
         if (userId != null && token !=null) {
             Intent eventsList = new Intent(getApplicationContext(), EventsListActivity.class);
             eventsList.putExtra("userId", userId);
@@ -41,11 +44,16 @@ public class MainActivity extends AppCompatActivity  {
             eventsList.putExtra("delay", Integer.valueOf(delay));
             startActivity(eventsList);
             finish();
-        } else {
+        }
+        /*
+         * If user hasn't already logged in Ridertrack application at least once, or has logged out after the last use,
+         * he/she is redirected to LoginActivity.
+         */
+        else {
             setContentView(R.layout.activity_main);
-            facebookButton = (Button) findViewById(R.id.facebook_sign_in_button);
-            googleButton = (Button) findViewById(R.id.google_sign_in_button);
-            emailButton = (Button) findViewById(R.id.email_sign_in_button);
+            Button facebookButton = (Button) findViewById(R.id.facebook_sign_in_button);
+            Button googleButton = (Button) findViewById(R.id.google_sign_in_button);
+            Button emailButton = (Button) findViewById(R.id.email_sign_in_button);
             emailButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -54,6 +62,11 @@ public class MainActivity extends AppCompatActivity  {
                     finish();
                 }
             });
+
+        /*
+         * Google and Facebook login are not yet implemented: these methods are not reachable due to the "GONE"
+         * visibility of the related buttons in the layout
+         */
             googleButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {

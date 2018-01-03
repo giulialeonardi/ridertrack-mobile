@@ -10,38 +10,50 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
+/**
+ * TimeoutActivity is created when the user clicks on the menu icon on the top right of the EventsListActivty and
+ * selects the choice "Data Sender".
+ * It displays six buttons, that correspond with different time intervals: this screen allows the user to choose
+ * how often (after how many minutes) he/she wants to send data about his/her position during any race.
+ */
 public class TimeoutActivity extends AppCompatActivity {
 
-    private int delay;
+    /**
+     * Variables related to buttons
+     */
     private Button timeout_2;
     private Button timeout_3;
     private Button timeout_5;
     private Button timeout_10;
     private Button timeout_20;
     private Button timeout_30;
-    private Button done;
+    /**
+     * Variables related to current user
+     */
     private String userId;
     private String token;
+    private int delay;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_timeout);
-
+        /*
+         * Retrieving information about current user
+         */
         Intent intent = getIntent();
         userId = intent.getStringExtra("userId");
         token = intent.getStringExtra("token");
-
+        /*
+         * Binding layout elements to variables
+         */
         timeout_2 = (Button) findViewById(R.id.timeout_2);
         timeout_3 = (Button) findViewById(R.id.timeout_3);
         timeout_5 = (Button) findViewById(R.id.timeout_5);
         timeout_10 = (Button) findViewById(R.id.timeout_10);
         timeout_20 = (Button) findViewById(R.id.timeout_20);
         timeout_30 = (Button) findViewById(R.id.timeout_30);
-        done = (Button) findViewById(R.id.done);
-
-
-
+        Button done = (Button) findViewById(R.id.done);
 
         timeout_2.setOnClickListener(new View.OnClickListener() {
             @Override

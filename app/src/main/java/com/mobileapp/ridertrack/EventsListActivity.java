@@ -73,11 +73,11 @@ public class EventsListActivity extends AppCompatActivity {
 
     /**
      * OnCrate method actions:
-     * 1 - Binds the activity to its layout
+     * 1 - Bind the activity to its layout
      * 2 - Retrieve information about current user, shared by the activity which started EventsListActivity
-     * 3 - Binds layout elements to variables
-     * 4 - Handling the pop up menu with timeout choice and logout options
-     * 5 - Initializes counter
+     * 3 - Bind layout elements to variables
+     * 4 - Handle the pop up menu with timeout choice and logout options
+     * 5 - Initialize counter
      * 6 - Send a GET request to server, in order to retrieve the list of events in which the current user
      * is enrolled and shows a progress bar waiting for result
      *
@@ -87,11 +87,11 @@ public class EventsListActivity extends AppCompatActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         /*
-         * 1 - Binds the activity to its layout
+         * 1 - Binding the activity to its layout
          */
         setContentView(R.layout.activity_eventslist);
         /*
-         * 2 - Retrieve information about current user, shared by the activity which started EventsListActivity
+         * 2 - Retrieving information about current user, shared by the activity which started EventsListActivity
          */
         Intent intent = getIntent();
         userId = intent.getStringExtra("userId");
@@ -102,7 +102,7 @@ public class EventsListActivity extends AppCompatActivity {
         Ed.putString("delay", String.valueOf(delay));
         Ed.commit();
         /*
-         * 3 - Binds layout elements to variables
+         * 3 - Binding layout elements to variables
          */
         mProgressView = findViewById(R.id.login_progress);
         mListView = findViewById(R.id.list);
@@ -169,13 +169,13 @@ public class EventsListActivity extends AppCompatActivity {
         });
 
         /*
-         * 5 - Initializes counter
+         * 5 - Initializing counter
          */
         counter = 0;
 
         /*
-         * 6 - Send a GET request to server, in order to retrieve the list of events in which the current user
-         * is enrolled and shows a progress bar waiting for result
+         * 6 - Sending a GET request to server, in order to retrieve the list of events in which the current user
+         * is enrolled and showing progress bar waiting for result
          */
         showProgress(true);
         new GetListOfEvents().execute();

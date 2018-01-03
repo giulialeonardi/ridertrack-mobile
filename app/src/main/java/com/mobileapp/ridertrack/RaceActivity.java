@@ -52,7 +52,6 @@ public class RaceActivity extends AppCompatActivity {
     private Chronometer time;
     private TextView speed;
     private TextView finishLine;
-    private Button share;
     private long startingTime;
     private Location location;
     private float distance;
@@ -69,7 +68,6 @@ public class RaceActivity extends AppCompatActivity {
     private CallbackManager callbackManager;
     private ShareDialog shareDialog;
     private Double distanceToFinishLine;
-    private String startTime;
     private String city;
 
     @Override
@@ -83,7 +81,7 @@ public class RaceActivity extends AppCompatActivity {
         locationArrayList = new ArrayList<>();
         finishLine = findViewById(R.id.finish_line);
         speed = findViewById(R.id.speed);
-        share = findViewById(R.id.facebook_sign_in_button);
+        Button share = findViewById(R.id.facebook_sign_in_button);
         time = findViewById(R.id.time);
 
         Intent intent = getIntent();
@@ -93,7 +91,7 @@ public class RaceActivity extends AppCompatActivity {
         delay = intent.getIntExtra("delay", 5);
         name = intent.getStringExtra("name");
         city = intent.getStringExtra("city");
-        startTime = intent.getStringExtra("startingTime");
+        String startTime = intent.getStringExtra("startingTime");
         try {
             startTracking(startTime);
             //time calculation
