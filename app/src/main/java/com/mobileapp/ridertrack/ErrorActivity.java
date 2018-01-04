@@ -11,7 +11,7 @@ import android.widget.Button;
  */
 public class ErrorActivity extends AppCompatActivity {
 
-    private Button tryAgain;
+    private static final String TAG = "ErrorActivity";
 
     /**
      * Binds the activity to its layout.
@@ -22,7 +22,7 @@ public class ErrorActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_error);
-        tryAgain = findViewById(R.id.try_again_button);
+        Button tryAgain = findViewById(R.id.try_again_button);
         tryAgain.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

@@ -1,6 +1,5 @@
 package com.mobileapp.ridertrack;
 
-
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -12,8 +11,6 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-import android.widget.Toast;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 import java.io.BufferedReader;
@@ -30,7 +27,8 @@ import javax.net.ssl.HttpsURLConnection;
 
 public class LocationService extends Service
 {
-    private static final String TAG = "LOCATION SERVICE";
+    private static final String TAG = "Location service";
+
     private LocationManager mLocationManager = null;
     private static final int LOCATION_INTERVAL = 1000;
     private static final float LOCATION_DISTANCE = 10f;

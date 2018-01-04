@@ -24,21 +24,29 @@
             android:exported="true" />
         <activity
             android:name=".MainActivity"
-            android:label="@string/app_name">
+            android:label="@string/app_name"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".LoginActivity"/>
-        <activity android:name=".ErrorActivity"/>
-        <activity android:name=".RaceActivity"/>
-        <service android:name=".LocationService" />
+        <activity android:name=".LoginActivity"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".ErrorActivity"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".RaceActivity"
+            android:screenOrientation="portrait"/>
+        <service android:name=".LocationService"
+            android:screenOrientation="portrait"/>
         <meta-data android:name="com.facebook.sdk.ApplicationId"
             android:value="@string/facebook_app_id"/>
-        <activity android:name=".GoogleAuth" />
-        <activity android:name=".EventsListActivity" />
-        <activity android:name=".TimeoutActivity" />
+        <activity android:name=".GoogleAuth"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".EventsListActivity"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".TimeoutActivity"
+            android:screenOrientation="portrait"/>
 
     </application>
 

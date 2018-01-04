@@ -99,23 +99,14 @@
             android:text="@string/finish_line_measure"
             android:textSize="50sp"/>
 </LinearLayout>
-
-    <Button
-        android:id="@+id/facebook_sign_in_button"
-        style="?android:textAppearanceSmall"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:text="@string/share"
-        android:textStyle="bold"
-        android:textAllCaps="true"
-        android:textColor="@color/white"
-        android:backgroundTint="@color/blue"
-        android:visibility="invisible"
-        android:clickable="false"
-        android:drawableStart="@drawable/facebook"
-        android:layout_marginHorizontal="40dp"
-        android:layout_marginVertical="20dp"/>
-
+<ImageView
+    android:id="@+id/facebook_sign_in_button"
+    android:layout_width="wrap_content"
+    android:layout_height="0dp"
+    android:layout_weight="1"
+    android:src="@drawable/facebook_button"
+    android:layout_marginHorizontal="40dp"
+    android:layout_marginBottom="20dp"
+    android:layout_marginTop="30dp"/>
 
 </LinearLayout>

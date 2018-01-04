@@ -14,7 +14,6 @@
             android:layout_height="wrap_content"
             android:textSize="25sp"
             android:layout_gravity="center_vertical"
-
             android:textAllCaps="true"
             android:textStyle="bold"
             android:textColor="@color/dark_red"
@@ -37,7 +36,7 @@
         android:text="@string/click_event"
         android:background="@color/dark_red"
         android:textColor="@color/white"
-        android:textSize="20sp"
+        android:textSize="15sp"
         android:gravity="center"
         android:textStyle="italic"
         android:paddingTop="15dp"
@@ -110,7 +109,7 @@
            android:layout_width="wrap_content"
            android:layout_height="wrap_content"
            android:orientation="vertical"
-           android:background="@color/white"
+           android:background="@color/whitea"
             android:visibility="gone">
 
             <TextView

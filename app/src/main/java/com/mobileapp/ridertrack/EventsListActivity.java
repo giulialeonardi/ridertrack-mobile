@@ -1,6 +1,5 @@
 package com.mobileapp.ridertrack;
 
-
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
@@ -34,10 +33,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
-
 import javax.net.ssl.HttpsURLConnection;
 
 /**
@@ -51,7 +47,7 @@ import javax.net.ssl.HttpsURLConnection;
  */
 public class EventsListActivity extends AppCompatActivity {
 
-    private String TAG = "EventsListActivity";
+    private static final String TAG = "EventsListActivity";
     /**
      * Variables related to current user.
      */
@@ -180,252 +176,6 @@ public class EventsListActivity extends AppCompatActivity {
         showProgress(true);
         new GetListOfEvents().execute();
     }
-
-
-    /**
-     * Asynchronous methods which handle GET requests to server.
-     */
-    public class GetListOfEvents extends AsyncTask<String, Void, Boolean> {
-        /**
-         * GetListOfEvents method performs a GET request to the server, in order to retrieve the list of events in
-         * which the user in enrolled.
-         * No params needed.
-         *
-         * @param strings: not needed
-         * @return Boolean: true if the request ends correctly, false otherwise
-         */
-        @Override
-        protected Boolean doInBackground(String... strings) {
-            HttpURLConnection connection = null;
-            try {
-                URL url = null;
-                String response = null;
-                url = new URL("https://rider-track-dev.herokuapp.com/api/users/" + userId + "/enrolledEvents");
-                /*
-                 * Creating connection
-                 */
-                connection = (HttpURLConnection) url.openConnection();
-                /*
-                 * Setting the request property "Authorization" to personal token of current user
-                 */
-                connection.setRequestProperty("Authorization", "JWT " + token);
-                /*
-                 * Setting the request method to GET
-                 */
-                connection.setRequestMethod("GET");
-                /*
-                 * Reading in the data from input stream
-                 */
-                int responseCode = connection.getResponseCode();
-                /*
-                 * If the response code is 200, the GET request has concluded successfully
-                 */
-                if (responseCode == HttpsURLConnection.HTTP_OK) {
-                    /*
-                     * Creating input stream
-                     */
-                    String line = "";
-                    BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                    StringBuffer sb = new StringBuffer("");
-                    while ((line = in.readLine()) != null) {
-                        sb.append(line);
-                        break;
-                    }
-                    /*
-                     * Closing input stream
-                     */
-                    in.close();
-                    /*
-                     * Creating array list of events
-                     */
-                    eventsList = new ArrayList<>();
-                    /*
-                     * Handling response
-                     */
-                    splitResponse(sb);
-                    return true;
-                }
-                /*
-                 * If the response code is 401, the GET request hasn't concluded successfully:
-                 * the token related to current user could be expired and app is not authorized to retrieve
-                 * the list of personal events.
-                 * An error message is shown and user is redirected to MainActivity to login again.
-                 */
-                if (responseCode == HttpsURLConnection.HTTP_UNAUTHORIZED){
-                    /*
-                     * Creating error stream
-                     */
-                    String line = "";
-                    BufferedReader in = new BufferedReader(new
-                            InputStreamReader(
-                            connection.getErrorStream()));
-                    StringBuffer sb = new StringBuffer("");
-                    while ((line = in.readLine()) != null) {
-
-                        sb.append(line);
-                        break;
-                    }
-                    /*
-                     * Handling response: error pop up shown
-                     */
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            final Dialog dialog = new Dialog(EventsListActivity.this);
-                            dialog.setContentView(R.layout.popup_error);
-                            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-                            Button close = (Button) dialog.findViewById(R.id.close);
-                            close.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    /*
-                                     * Logout and reset of data about the current user
-                                     */
-                                    dialog.dismiss();
-                                    SharedPreferences sp = getSharedPreferences("Login", MODE_PRIVATE);
-                                    SharedPreferences.Editor Ed = sp.edit();
-                                    Ed.putString("userId", null);
-                                    Ed.putString("token", null);
-                                    Ed.putString("delay", null);
-                                    Ed.commit();
-                                    Intent main = new Intent(getApplicationContext(), MainActivity.class);
-                                    startActivity(main);
-                                    finish();
-                                }
-                            });
-                            dialog.show();
-                        }
-                        });
-                    in.close();
-                    return false;
-                }
-                /*
-                 * If the response code is different from 200 or 401, the GET request hasn't concluded successfully:
-                 * the exception is displayed as log message
-                 */
-                else{
-                    /*
-                     * Creating error stream
-                     */
-                    String line = "";
-
-                    BufferedReader in = new BufferedReader(new
-                            InputStreamReader(
-                            connection.getErrorStream()));
-
-                    StringBuffer sb = new StringBuffer("");
-
-                    while ((line = in.readLine()) != null) {
-
-                        sb.append(line);
-                        break;
-                    }
-                    in.close();
-                    Log.e(TAG, sb.toString());
-                    return false;
-                }
-            } catch (Exception e) {
-                Log.e(TAG,e.toString());
-                return false;
-            } finally {
-                if (connection != null) {
-                    connection.disconnect();
-                }
-            }
-        }
-    }
-
-    public class GetStartingPoint extends AsyncTask<String, Void, Boolean> {
-        /**
-         * GetStartingPoint method performs a GET request to the server, in order to retrieve the starting point of
-         * the event, whose id is passed as param.
-         * The method needs to receive the id of the event as param.
-         *
-         * @param strings: event Id
-         * @return Boolean: true if the request ends correctly, false otherwise
-         */
-        @Override
-        protected Boolean doInBackground(String... strings) {
-            HttpURLConnection connection = null;
-            try {
-                URL url = null;
-                String response = null;
-                url = new URL("https://rider-track-dev.herokuapp.com/api/events/" + strings[0] + "/route");
-               /*
-                * Creating connection
-                */
-                connection = (HttpURLConnection) url.openConnection();
-                /*
-                 * Setting the request property "Authorization" to personal token of current user
-                 */
-                connection.setRequestProperty("Authorization", "JWT " + token);
-                /*
-                * Setting the request method to GET
-                */
-                connection.setRequestMethod("GET");
-
-                /*
-                 * Reading in the data from input stream
-                 */
-                int responseCode = connection.getResponseCode();
-                 /*
-                 * If the response code is 200, the GET request has concluded successfully
-                 */
-                if (responseCode == HttpsURLConnection.HTTP_OK) {
-                    /*
-                     * Creating input stream
-                     */
-                    String line = "";
-
-                    BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-
-                    StringBuffer sb = new StringBuffer("");
-
-                    while ((line = in.readLine()) != null) {
-
-                        sb.append(line);
-                        break;
-                    }
-                    /*
-                     * Handling response
-                     */
-                    extractStartingPoint(sb, strings[0]);
-                    in.close();
-                    return true;
-                }
-                /*
-                 * If the response code is different from 200, the GET request hasn't concluded successfully:
-                 * the exception is displayed as log message
-                 */
-                else{
-                    String line = "";
-
-                    BufferedReader in = new BufferedReader(new
-                            InputStreamReader(
-                            connection.getErrorStream()));
-
-                    StringBuffer sb = new StringBuffer("");
-
-                    while ((line = in.readLine()) != null) {
-
-                        sb.append(line);
-                        break;
-                    }
-                    in.close();
-                    Log.e(TAG, sb.toString());
-                    return false;
-                }
-            } catch (Exception e) {
-                Log.e(TAG, e.toString());
-                return false;
-            } finally {
-                if (connection != null) {
-                    connection.disconnect();
-                }
-            }
-        }
-    }
-
     /**
      * SplitResponse method turns the String Buffer received from GetEventsList method, to a JSONArray of
      * JSONObjects event.
@@ -845,6 +595,249 @@ public class EventsListActivity extends AppCompatActivity {
             }
         }
         return city;
+    }
+    /**
+     * Asynchronous methods which handle GET requests to server.
+     */
+    public class GetListOfEvents extends AsyncTask<String, Void, Boolean> {
+        /**
+         * GetListOfEvents method performs a GET request to the server, in order to retrieve the list of events in
+         * which the user in enrolled.
+         * No params needed.
+         *
+         * @param strings: not needed
+         * @return Boolean: true if the request ends correctly, false otherwise
+         */
+        @Override
+        protected Boolean doInBackground(String... strings) {
+            HttpURLConnection connection = null;
+            try {
+                URL url = null;
+                String response = null;
+                url = new URL("https://rider-track-dev.herokuapp.com/api/users/" + userId + "/enrolledEvents");
+                /*
+                 * Creating connection
+                 */
+                connection = (HttpURLConnection) url.openConnection();
+                /*
+                 * Setting the request property "Authorization" to personal token of current user
+                 */
+                connection.setRequestProperty("Authorization", "JWT " + token);
+                /*
+                 * Setting the request method to GET
+                 */
+                connection.setRequestMethod("GET");
+                /*
+                 * Reading in the data from input stream
+                 */
+                int responseCode = connection.getResponseCode();
+                /*
+                 * If the response code is 200, the GET request has concluded successfully
+                 */
+                if (responseCode == HttpsURLConnection.HTTP_OK) {
+                    /*
+                     * Creating input stream
+                     */
+                    String line = "";
+                    BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                    StringBuffer sb = new StringBuffer("");
+                    while ((line = in.readLine()) != null) {
+                        sb.append(line);
+                        break;
+                    }
+                    /*
+                     * Closing input stream
+                     */
+                    in.close();
+                    /*
+                     * Creating array list of events
+                     */
+                    eventsList = new ArrayList<>();
+                    /*
+                     * Handling response
+                     */
+                    splitResponse(sb);
+                    return true;
+                }
+                /*
+                 * If the response code is 401, the GET request hasn't concluded successfully:
+                 * the token related to current user could be expired and app is not authorized to retrieve
+                 * the list of personal events.
+                 * An error message is shown and user is redirected to MainActivity to login again.
+                 */
+                if (responseCode == HttpsURLConnection.HTTP_UNAUTHORIZED){
+                    /*
+                     * Creating error stream
+                     */
+                    String line = "";
+                    BufferedReader in = new BufferedReader(new
+                            InputStreamReader(
+                            connection.getErrorStream()));
+                    StringBuffer sb = new StringBuffer("");
+                    while ((line = in.readLine()) != null) {
+
+                        sb.append(line);
+                        break;
+                    }
+                    /*
+                     * Handling response: error pop up shown
+                     */
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            final Dialog dialog = new Dialog(EventsListActivity.this);
+                            dialog.setContentView(R.layout.popup_error);
+                            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                            Button close = (Button) dialog.findViewById(R.id.close);
+                            close.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    /*
+                                     * Logout and reset of data about the current user
+                                     */
+                                    dialog.dismiss();
+                                    SharedPreferences sp = getSharedPreferences("Login", MODE_PRIVATE);
+                                    SharedPreferences.Editor Ed = sp.edit();
+                                    Ed.putString("userId", null);
+                                    Ed.putString("token", null);
+                                    Ed.putString("delay", null);
+                                    Ed.commit();
+                                    Intent main = new Intent(getApplicationContext(), MainActivity.class);
+                                    startActivity(main);
+                                    finish();
+                                }
+                            });
+                            dialog.show();
+                        }
+                    });
+                    in.close();
+                    return false;
+                }
+                /*
+                 * If the response code is different from 200 or 401, the GET request hasn't concluded successfully:
+                 * the exception is displayed as log message
+                 */
+                else{
+                    /*
+                     * Creating error stream
+                     */
+                    String line = "";
+
+                    BufferedReader in = new BufferedReader(new
+                            InputStreamReader(
+                            connection.getErrorStream()));
+
+                    StringBuffer sb = new StringBuffer("");
+
+                    while ((line = in.readLine()) != null) {
+
+                        sb.append(line);
+                        break;
+                    }
+                    in.close();
+                    Log.e(TAG, sb.toString());
+                    return false;
+                }
+            } catch (Exception e) {
+                Log.e(TAG,e.toString());
+                return false;
+            } finally {
+                if (connection != null) {
+                    connection.disconnect();
+                }
+            }
+        }
+    }
+
+    public class GetStartingPoint extends AsyncTask<String, Void, Boolean> {
+        /**
+         * GetStartingPoint method performs a GET request to the server, in order to retrieve the starting point of
+         * the event, whose id is passed as param.
+         * The method needs to receive the id of the event as param.
+         *
+         * @param strings: event Id
+         * @return Boolean: true if the request ends correctly, false otherwise
+         */
+        @Override
+        protected Boolean doInBackground(String... strings) {
+            HttpURLConnection connection = null;
+            try {
+                URL url = null;
+                String response = null;
+                url = new URL("https://rider-track-dev.herokuapp.com/api/events/" + strings[0] + "/route");
+               /*
+                * Creating connection
+                */
+                connection = (HttpURLConnection) url.openConnection();
+                /*
+                 * Setting the request property "Authorization" to personal token of current user
+                 */
+                connection.setRequestProperty("Authorization", "JWT " + token);
+                /*
+                * Setting the request method to GET
+                */
+                connection.setRequestMethod("GET");
+
+                /*
+                 * Reading in the data from input stream
+                 */
+                int responseCode = connection.getResponseCode();
+                 /*
+                 * If the response code is 200, the GET request has concluded successfully
+                 */
+                if (responseCode == HttpsURLConnection.HTTP_OK) {
+                    /*
+                     * Creating input stream
+                     */
+                    String line = "";
+
+                    BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+
+                    StringBuffer sb = new StringBuffer("");
+
+                    while ((line = in.readLine()) != null) {
+
+                        sb.append(line);
+                        break;
+                    }
+                    /*
+                     * Handling response
+                     */
+                    extractStartingPoint(sb, strings[0]);
+                    in.close();
+                    return true;
+                }
+                /*
+                 * If the response code is different from 200, the GET request hasn't concluded successfully:
+                 * the exception is displayed as log message
+                 */
+                else{
+                    String line = "";
+
+                    BufferedReader in = new BufferedReader(new
+                            InputStreamReader(
+                            connection.getErrorStream()));
+
+                    StringBuffer sb = new StringBuffer("");
+
+                    while ((line = in.readLine()) != null) {
+
+                        sb.append(line);
+                        break;
+                    }
+                    in.close();
+                    Log.e(TAG, sb.toString());
+                    return false;
+                }
+            } catch (Exception e) {
+                Log.e(TAG, e.toString());
+                return false;
+            } finally {
+                if (connection != null) {
+                    connection.disconnect();
+                }
+            }
+        }
     }
 }
 

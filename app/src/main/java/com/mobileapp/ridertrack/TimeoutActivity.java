@@ -4,9 +4,7 @@ package com.mobileapp.ridertrack;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
@@ -17,6 +15,8 @@ import android.widget.Button;
  * how often (after how many minutes) he/she wants to send data about his/her position during any race.
  */
 public class TimeoutActivity extends AppCompatActivity {
+
+    private static final String TAG = "TimeoutActivity";
 
     /**
      * Variables related to buttons
@@ -136,7 +136,6 @@ public class TimeoutActivity extends AppCompatActivity {
                 eventsList.putExtra("userId", userId);
                 eventsList.putExtra("token", token);
                 eventsList.putExtra("delay", delay);
-                Log.e("[Timeout Activity]", String.valueOf(delay));
                 startActivity(eventsList);
                 finish();
             }
