@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
@@ -33,6 +34,7 @@ public class TimeoutActivity extends AppCompatActivity {
     private String userId;
     private String token;
     private int delay;
+    private int newDelay;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,6 +46,7 @@ public class TimeoutActivity extends AppCompatActivity {
         Intent intent = getIntent();
         userId = intent.getStringExtra("userId");
         token = intent.getStringExtra("token");
+        delay = intent.getIntExtra("delay", 5);
         /*
          * Binding layout elements to variables
          */
@@ -55,10 +58,33 @@ public class TimeoutActivity extends AppCompatActivity {
         timeout_30 = (Button) findViewById(R.id.timeout_30);
         Button done = (Button) findViewById(R.id.done);
 
+        switch(delay){
+            case 2:
+                timeout_2.setBackgroundColor(Color.rgb(255, 153, 153));
+                break;
+            case 3:
+                timeout_3.setBackgroundColor(Color.rgb(255, 153, 153));
+                break;
+            case 5:
+                timeout_5.setBackgroundColor(Color.rgb(255, 153, 153));
+                break;
+            case 10:
+                timeout_10.setBackgroundColor(Color.rgb(255, 153, 153));
+                break;
+            case 20:
+                timeout_20.setBackgroundColor(Color.rgb(255, 153, 153));
+                break;
+            case 30:
+                timeout_30.setBackgroundColor(Color.rgb(255, 153, 153));
+                break;
+        }
+
+        newDelay = delay;
+
         timeout_2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                delay = 2;
+                newDelay = 2;
                 timeout_2.setBackgroundColor(Color.rgb(255, 153, 153));
                 timeout_3.setBackgroundColor(Color.rgb(255, 230, 230));
                 timeout_5.setBackgroundColor(Color.rgb(255, 230, 230));
@@ -71,7 +97,7 @@ public class TimeoutActivity extends AppCompatActivity {
         timeout_3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                delay = 3;
+                newDelay = 3;
                 timeout_2.setBackgroundColor(Color.rgb(255, 230, 230));
                 timeout_3.setBackgroundColor(Color.rgb(255, 153, 153));
                 timeout_5.setBackgroundColor(Color.rgb(255, 230, 230));
@@ -84,7 +110,7 @@ public class TimeoutActivity extends AppCompatActivity {
         timeout_5.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                delay = 5;
+                newDelay = 5;
                 timeout_2.setBackgroundColor(Color.rgb(255, 230, 230));
                 timeout_3.setBackgroundColor(Color.rgb(255, 230, 230));
                 timeout_5.setBackgroundColor(Color.rgb(255, 153, 153));
@@ -96,7 +122,7 @@ public class TimeoutActivity extends AppCompatActivity {
         timeout_10.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                delay = 10;
+                newDelay = 10;
                 timeout_2.setBackgroundColor(Color.rgb(255, 230, 230));
                 timeout_3.setBackgroundColor(Color.rgb(255, 230, 230));
                 timeout_5.setBackgroundColor(Color.rgb(255, 230, 230));
@@ -108,7 +134,7 @@ public class TimeoutActivity extends AppCompatActivity {
         timeout_20.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                delay = 20;
+                newDelay = 20;
                 timeout_2.setBackgroundColor(Color.rgb(255, 230, 230));
                 timeout_3.setBackgroundColor(Color.rgb(255, 230, 230));
                 timeout_5.setBackgroundColor(Color.rgb(255, 230, 230));
@@ -120,7 +146,7 @@ public class TimeoutActivity extends AppCompatActivity {
         timeout_30.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                delay = 30;
+                newDelay = 30;
                 timeout_2.setBackgroundColor(Color.rgb(255, 230, 230));
                 timeout_3.setBackgroundColor(Color.rgb(255, 230, 230));
                 timeout_5.setBackgroundColor(Color.rgb(255, 230, 230));
@@ -135,7 +161,7 @@ public class TimeoutActivity extends AppCompatActivity {
                 Intent eventsList = new Intent(getApplicationContext(), EventsListActivity.class);
                 eventsList.putExtra("userId", userId);
                 eventsList.putExtra("token", token);
-                eventsList.putExtra("delay", delay);
+                eventsList.putExtra("delay", newDelay);
                 startActivity(eventsList);
                 finish();
             }

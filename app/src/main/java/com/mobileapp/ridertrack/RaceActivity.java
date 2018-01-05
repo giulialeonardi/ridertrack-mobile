@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.res.Resources;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -11,6 +12,7 @@ import android.os.Handler;
 import android.os.SystemClock;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
+import android.text.Html;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
@@ -30,7 +32,6 @@ import com.facebook.share.widget.ShareDialog;
 import org.json.JSONException;
 import org.json.JSONObject;
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.net.HttpURLConnection;
@@ -72,6 +73,7 @@ public class RaceActivity extends AppCompatActivity {
     private Double distanceToFinishLine;
     private String city;
     private long  currentTime;
+    private String type;
     /**
      * Variables related to current user
      */
@@ -86,6 +88,7 @@ public class RaceActivity extends AppCompatActivity {
     private ArrayList<Location> locationArrayList;
     private BroadcastReceiver receiver;
     private LocalBroadcastManager lbm;
+    private Intent locationService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -113,7 +116,9 @@ public class RaceActivity extends AppCompatActivity {
         delay = intent.getIntExtra("delay", 5);
         name = intent.getStringExtra("name");
         city = intent.getStringExtra("city");
+        type = intent.getStringExtra("type");
         String startTime = intent.getStringExtra("startingTime");
+        Log.e(TAG, "Delay: " + delay);
         /*
          * Setting the chronometer
          */
@@ -156,28 +161,34 @@ public class RaceActivity extends AppCompatActivity {
         receiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
+                Log.e(TAG, "broadcast receiver" + intent.getExtras());
                 Bundle extras = intent.getExtras();
-                if(intent.hasCategory(INTENT_EXTRA)){
+                location = (Location) extras.get(INTENT_EXTRA);
+                Log.e(TAG, "location" + location);
+                distanceToFinishLine = (Double) extras.getDouble("distance");
+                Log.e(TAG, "distance" + distanceToFinishLine);
+
+
                 if (extras != null) {
                     location = (Location) extras.get(INTENT_EXTRA);
-                }
-                if(intent.hasCategory("distance")) {
+                        Log.e(TAG, "Location received: " + location);
+                        locationArrayList.add(location);
+
                     distanceToFinishLine = (Double) extras.getDouble("distance");
                     try {
                         setDistanceToFinishLine(distanceToFinishLine);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
-                }
-                if(intent.hasCategory("tracking")) {
+
                     String tracking = extras.getString("tracking");
                     if (tracking != null && tracking.equals("stop")) {
                         stopTracking();
-                    }
+
                 }
                 currentTime = SystemClock.elapsedRealtime();
                 Log.i(TAG, "Intent Extra key=" + INTENT_EXTRA + ":" + location);
-                locationArrayList.add(location);
+
                     /*
                      * Calculating speed only at the reception of at least two different inputs
                      */
@@ -279,12 +290,14 @@ public class RaceActivity extends AppCompatActivity {
      * StopTracking method closes the RaceActivity and redirects the user back to EventsListActivity
      */
     private void stopTracking(){
+        stopService(locationService);
         stopChronometer();
-        Intent eventsList = new Intent(getApplicationContext(), EventsListActivity.class);
+        /*Intent eventsList = new Intent(this, EventsListActivity.class);
         eventsList.putExtra("userId", userId);
         eventsList.putExtra("token", token);
+        eventsList.putExtra("delay", delay);
         startActivity(eventsList);
-        finish();
+        finish();*/
     }
     /**
      * StartChronometer method starts the chronometer
@@ -297,6 +310,8 @@ public class RaceActivity extends AppCompatActivity {
                 time.start();
                 startingTime = time.getBase();
                 startLocationService();
+                Log.e(TAG, "StartChronometer completed ");
+
             }
         });
     }
@@ -311,12 +326,12 @@ public class RaceActivity extends AppCompatActivity {
      */
     private void startLocationService()
     {
-        Intent startLocationService = new Intent(this, LocationService.class);
-        startLocationService.putExtra("userId", userId);
-        startLocationService.putExtra("token", token);
-        startLocationService.putExtra("eventId", eventId);
-        startLocationService.putExtra("delay", delay);
-        startService(startLocationService);
+        locationService = new Intent(this, LocationService.class);
+        locationService.putExtra("userId", userId);
+        locationService.putExtra("token", token);
+        locationService.putExtra("eventId", eventId);
+        locationService.putExtra("delay", delay);
+        startService(locationService);
     }
     /**
      * CalculateSpeed method calculates the average speed at which the user ran the distance passed as param.
@@ -394,8 +409,14 @@ public class RaceActivity extends AppCompatActivity {
             /*
              * Create an action
              */
+            String actionType = "";
+            if(type.equals("running") || type.equals("hiking") || type.equals("triathlon") || type.equals("other")){
+                actionType = "fitness.run";
+            }if(type.equals("cycling")){
+                actionType = "fitness.bikes";
+            }
             ShareOpenGraphAction action = new ShareOpenGraphAction.Builder()
-                    .setActionType("fitness.run")
+                    .setActionType(actionType)
                     .putObject("fitness:course", object)
                     .build();
             /*
@@ -492,13 +513,22 @@ public class RaceActivity extends AppCompatActivity {
                      */
                     if(status.equals("ongoing")){
                        startChronometer();
-                       TextView stat = findViewById(R.id.status);
-                       stat.setText(R.string.started);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                TextView stat = findViewById(R.id.status);
+                                Resources res = getResources();
+                                String text = String.format(res.getString(R.string.started), delay);
+                                stat.setText(text);
+                            }
+                        });
                     }else{
                         /*
                          * Triggering recursion to wait for the event status to turn into "ongoing"
                          */
                         recursiveCheck();
+                        Log.e(TAG, "RecursiveCheck called ");
+
                     }
                     return true;
                 }else{
@@ -516,7 +546,7 @@ public class RaceActivity extends AppCompatActivity {
                         break;
                     }
                     /*
-                     * Handling response: error pop up shown
+                     * Handling response
                      */
                     Log.e(TAG, sb.toString());
                     in.close();

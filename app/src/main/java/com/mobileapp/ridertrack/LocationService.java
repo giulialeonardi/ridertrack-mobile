@@ -273,8 +273,6 @@ public class LocationService extends Service
                     intent.putExtra("tracking", "stop");
                     LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getApplicationContext());
                     lbm.sendBroadcast(intent);
-                    stopSelf();
-
                     Log.e("false", String.valueOf(responseCode) + sb.toString());
                     return sb.toString();
                 }

@@ -131,8 +131,8 @@ public class EventsListActivity extends AppCompatActivity {
                                 Intent timeout = new Intent(getApplicationContext(), TimeoutActivity.class);
                                 timeout.putExtra("userId", userId);
                                 timeout.putExtra("token", token);
+                                timeout.putExtra("delay", delay);
                                 startActivity(timeout);
-                                finish();
                                 return true;
                             /*
                              * Logging out the user and resetting all the related information
@@ -189,6 +189,7 @@ public class EventsListActivity extends AppCompatActivity {
     private void splitResponse(StringBuffer sb) throws JSONException, ParseException {
         JSONObject response = new JSONObject(sb.toString());
         JSONArray events = response.getJSONArray("events");
+        Log.e("Number of events of GET", String.valueOf(events.length()));
         /*
          * Checking if the list of events is empty
          */
@@ -238,6 +239,7 @@ public class EventsListActivity extends AppCompatActivity {
     private void manageEvent(JSONObject jObject) throws JSONException, ParseException {
         if(jObject.has("status")) {
             String status = jObject.getString("status");
+            Log.e("Status of " + jObject.getString("name"), status);
             if (!status.equals("passed")) {
                 Event event = new Event();
                 event.setStatus(status);
@@ -409,7 +411,7 @@ public class EventsListActivity extends AppCompatActivity {
                      */
                     LinearLayout event_box = findViewById(R.id.event_box);
                     LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(event_box.getLayoutParams());
-                    params.setMargins(10, 20, 10, 20);
+                    params.setMargins(20, 0, 20, 20);
                     event.setLayoutParams(params);
                     /*
                      * Adding event view
@@ -433,6 +435,7 @@ public class EventsListActivity extends AppCompatActivity {
                             raceActivity.putExtra("delay", delay);
                             raceActivity.putExtra("name", findEventNameFromID(event.getTag().toString()));
                             raceActivity.putExtra("city", findEventCityFromID(event.getTag().toString()));
+                            raceActivity.putExtra("type", findEventTypeFromID(event.getTag().toString()));
                             raceActivity.putExtra("startingPoint", findEventStartingPointFromID(event.getTag().toString()));
                             raceActivity.putExtra("startingTime", findEventStartingTimeFromID(event.getTag().toString()));
                             startActivity(raceActivity);
@@ -597,6 +600,22 @@ public class EventsListActivity extends AppCompatActivity {
         return city;
     }
     /**
+     * FindEventTypeFromID method returns the type of event whose id has been passed as param.
+     *
+     * @param eventId: String variable, containing the id of the
+     * @return String: event type
+     */
+    private String findEventTypeFromID(String eventId) {
+        String type = "";
+
+        for (Event event : eventsList) {
+            if (event.getId().equals(eventId)) {
+                type = event.getType();
+            }
+        }
+        return type;
+    }
+    /**
      * Asynchronous methods which handle GET requests to server.
      */
     public class GetListOfEvents extends AsyncTask<String, Void, Boolean> {
@@ -631,6 +650,8 @@ public class EventsListActivity extends AppCompatActivity {
                  * Reading in the data from input stream
                  */
                 int responseCode = connection.getResponseCode();
+                Log.e("RESPONSE", responseCode + connection.getResponseMessage());
+
                 /*
                  * If the response code is 200, the GET request has concluded successfully
                  */
