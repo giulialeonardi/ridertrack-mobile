@@ -1,9 +1,11 @@
 # Tag last commit as 'latest'.
-yourfilenames=`ls ./app/build/outputs/apk/release/*`
+yourfilenames=`ls ./app/build/outputs/apk/*`
+echo 'Files in apk folder'
 for eachfile in $yourfilenames
 do
    echo $eachfile
 done
+echo 'Files in apk folder'
 if [ "$TRAVIS_BRANCH" = "master" -a "$TRAVIS_PULL_REQUEST" = "false" ]; then
   git config --global user.email "caprarelli.alessandro@gmail.com"
   git config --global user.name "Alessandro Caprarelli"
