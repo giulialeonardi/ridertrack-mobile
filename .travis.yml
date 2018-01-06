@@ -44,6 +44,6 @@ deploy:
     branch: master
   api_key:
     secure: "D02g40YkG88ap7UqitE+LMGhUA+HMb9ON3V+RS8GdSn039iA/cmafi8R9GA10rd38Ytwe94jO0aopGyPhYkg7GgeFl4ynmCEkWIBncJSc53iuW3y+iX2XijfTyvZhuTBNV1EErVcDnAw0xu9cJ9Cnsjkyfl9pZ9H/WfS4TiRwISdH60OLJhqKZhEq2JHwF6lUmGLjPe5cG+tA7dmv8+ZoQBWMo5t+iT6Wd3tICGR4PAJz7qm6nah4P9tyjyq3c2zGopntrp02X3ua017WN3/AjQD9VPRD0hpsxik9jCIlOHnXM0v9UJ7GTXn+dJBrD7Ek+Rex7rToNIwm0zeJeobHX++45rFCcHUUUPM4QRmyAyuf6iU047l/TSZa2ATWhxoeBk9YBA8AzPO+xdmKPTGLU/T9ee3xEWUi2U81U5PYhOxB2IXimWYX46H2fSgGUT30dG5xsfZM6fYjvNQ9NHsxI2AaKKntlXLhwoFG5MA4mb57jgoE3U3i4B8+/vuwgJSMfdWtH9WMT/QMAo2Oc6HQwRpKRtiUAqF1EO1Q/EWgNe9HIsmvtfP8zTN8s+XlBaI9yKHlgyJxW8lFV1G8RS1dvBxZulJYXlFyYWhdeyf74CmCl6sWiNGQ3WjDvo+glfuoIEYQ4siiBmyEjlO/4RiqodVFYQwhCryCSEMGZVgkgI="
-  file: "app/build/outputs/apk/release/app-release-unsigned.apk"
+  file: "app/build/outputs/apk/app-debug.apk"
   overwrite: true
   skip_cleanup: true
