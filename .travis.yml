@@ -31,7 +31,7 @@ android:
   - extra
 
 script:
-- "./gradlew clean assembleDebug build"
+- "./gradlew clean generateDebugSources generateDebugAndroidTestSources mockableAndroidJar assembleDebug build"
 before_install:
   - chmod +x tag.sh
 
