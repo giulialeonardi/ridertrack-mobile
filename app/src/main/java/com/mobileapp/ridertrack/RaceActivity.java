@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.location.Location;
 import android.os.AsyncTask;
@@ -12,7 +13,6 @@ import android.os.Handler;
 import android.os.SystemClock;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
-import android.text.Html;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
@@ -68,6 +68,7 @@ public class RaceActivity extends AppCompatActivity {
     private String eventId;
     private Location startingPoint;
     private long startingTime;
+    private long actualStartingTime;
     private Location location;
     private float distance;
     private Double distanceToFinishLine;
@@ -303,15 +304,24 @@ public class RaceActivity extends AppCompatActivity {
      * StartChronometer method starts the chronometer
      */
     public void startChronometer() {
+        SharedPreferences sp = getSharedPreferences("ActualStartingTime", MODE_PRIVATE);
+        String ast=sp.getString("ast", "");
+        if(ast.equals("")) {
+            actualStartingTime = SystemClock.elapsedRealtime();
+            SharedPreferences sp2 = getSharedPreferences("ActualStartingTime", MODE_PRIVATE);
+            SharedPreferences.Editor Ed = sp2.edit();
+            Ed.putString("ast", String.valueOf(actualStartingTime));
+            Ed.commit();
+        }else{
+            actualStartingTime = Long.valueOf(ast);
+        }
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                time.setBase(SystemClock.elapsedRealtime());
+                time.setBase(actualStartingTime);
                 time.start();
                 startingTime = time.getBase();
                 startLocationService();
-                Log.e(TAG, "StartChronometer completed ");
-
             }
         });
     }
@@ -560,6 +570,14 @@ public class RaceActivity extends AppCompatActivity {
                     connection.disconnect();
                 }
             }
+        }
+    }
+    public void logLargeString(String str) {
+        if(str.length() > 3000) {
+            Log.i(TAG, str.substring(0, 3000));
+            logLargeString(str.substring(3000));
+        } else {
+            Log.i(TAG, str); // continuation
         }
     }
 }

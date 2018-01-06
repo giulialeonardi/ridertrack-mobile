@@ -411,7 +411,7 @@ public class EventsListActivity extends AppCompatActivity {
                      */
                     LinearLayout event_box = findViewById(R.id.event_box);
                     LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(event_box.getLayoutParams());
-                    params.setMargins(20, 0, 20, 20);
+                    params.setMargins(30, 0, 30, 20);
                     event.setLayoutParams(params);
                     /*
                      * Adding event view
