@@ -38,6 +38,7 @@ public class LocationService extends Service
     private ArrayList<Location> listOfLocations;
     private ArrayList<String> listOfTimestamps;
     private ArrayList<Double> listOfDistances;
+    private String tracking;
     private int delay;
 
     private class LocationListener implements android.location.LocationListener {
@@ -49,6 +50,7 @@ public class LocationService extends Service
             listOfLocations = new ArrayList<>();
             listOfTimestamps = new ArrayList<>();
             listOfDistances = new ArrayList<>();
+            tracking = "";
 
         }
 
@@ -116,8 +118,7 @@ public class LocationService extends Service
         final int delayMillis = delay * 1000;
         Log.e("[Location Service]", String.valueOf(delayMillis));
         final Handler ha = new Handler();
-        ha.postDelayed(new Runnable() {
-
+        ha.post(new Runnable() {
             @Override
             public void run() {
                 if (listOfLocations.size() > 0) {
@@ -134,18 +135,25 @@ public class LocationService extends Service
                     }
                     Double distance = listOfDistances.get(listOfDistances.size()-1);
                     intent.putExtra("distance", distance);
+                    if(!tracking.equals("")){
+                        intent.putExtra("tracking", "stop");
+                        LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getApplicationContext());
+                        lbm.sendBroadcast(intent);
+                        stopSelf();
+                    }else{
                     LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getApplicationContext());
                     lbm.sendBroadcast(intent);
                     ha.postDelayed(this, delayMillis);
                     listOfLocations.remove(listOfLocations.size()-1);
                     listOfTimestamps.remove(listOfTimestamps.size()-1);
                     listOfDistances.remove(listOfDistances.size()-1);
+                    }
                 } else {
                     Log.e("No data available", "Wait " + delayMillis/2000 + " seconds");
                     ha.postDelayed(this, delayMillis/2);
                 }
             }
-        }, delayMillis);
+        });
 
         return START_STICKY;
     }
@@ -268,11 +276,7 @@ public class LocationService extends Service
 
                     in.close();
                     Log.e("Tracking finished", sb.toString());
-                    Intent intent = new Intent();
-                    intent.setAction(Constants.INTENT_ACTION);
-                    intent.putExtra("tracking", "stop");
-                    LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getApplicationContext());
-                    lbm.sendBroadcast(intent);
+                    tracking = "stop";
                     Log.e("false", String.valueOf(responseCode) + sb.toString());
                     return sb.toString();
                 }

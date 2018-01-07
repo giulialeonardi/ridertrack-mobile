@@ -194,9 +194,10 @@ public class RaceActivity extends AppCompatActivity {
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
-
+                    Log.e("before", "extras.getString");
                     String tracking = extras.getString("tracking");
                     if (tracking != null && tracking.equals("stop")) {
+                        Log.e("after", "extras.getString");
                         stopTracking();
 
                 }
@@ -308,7 +309,9 @@ public class RaceActivity extends AppCompatActivity {
         SharedPreferences.Editor Ed = sp.edit();
         Ed.putString("ast", "");
         Ed.commit();
+        Log.e("before","stopService");
         stopService(locationService);
+        Log.e("after","stopService");
         stopChronometer();
         /*Intent eventsList = new Intent(this, EventsListActivity.class);
         eventsList.putExtra("userId", userId);
@@ -345,7 +348,15 @@ public class RaceActivity extends AppCompatActivity {
      * StopChronometer method stops the chronometer
      */
     public void stopChronometer() {
+        Log.e("before","stopchronometer");
+
         time.stop();
+        SharedPreferences sp = getSharedPreferences("ActualStartingTime", MODE_PRIVATE);
+        SharedPreferences.Editor Ed = sp.edit();
+        Ed.putString("ast", "");
+        Ed.commit();
+
+        Log.e("after","stopchronometer");
     }
     /**
      * StartLocationService method starts LocationService, sharing data about current user and selected event.

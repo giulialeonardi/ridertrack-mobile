@@ -271,12 +271,12 @@ public class EventsListActivity extends AppCompatActivity {
                         String city = jObject.getString("city");
                         event.setCity(city);
                     }
-                    if (jObject.has("startingDate")) {
-                        String startingDate = jObject.getString("startingDate");
+                    if (jObject.has("startingDateString")) {
+                        String startingDate = jObject.getString("startingDateString");
                         event.setStartingDate(startingDate);
                     }
-                    if (jObject.has("startingTime")) {
-                        String startingTime = jObject.getString("startingTime");
+                    if (jObject.has("startingTimeString")) {
+                        String startingTime = jObject.getString("startingTimeString");
                         event.setStartingTime(startingTime);
                     }
                     if (jObject.has("maxDuration")) {
