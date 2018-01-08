@@ -314,12 +314,12 @@ public class RaceActivity extends AppCompatActivity {
         stopService(locationService);
         Log.e("after","stopService");
         stopChronometer();
-        /*Intent eventsList = new Intent(this, EventsListActivity.class);
+        Intent eventsList = new Intent(this, EventsListActivity.class);
         eventsList.putExtra("userId", userId);
         eventsList.putExtra("token", token);
         eventsList.putExtra("delay", delay);
         startActivity(eventsList);
-        finish();*/
+        finish();
     }
     /**
      * StartChronometer method starts the chronometer
