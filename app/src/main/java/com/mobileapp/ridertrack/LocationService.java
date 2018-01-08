@@ -122,19 +122,21 @@ public class LocationService extends Service
             @Override
             public void run() {
                 if (listOfLocations.size() > 0) {
-                    Location location = listOfLocations.get(listOfLocations.size()-1);
-                    String timeStamp = listOfTimestamps.get(listOfTimestamps.size()-1);
+                    Location location = listOfLocations.get(listOfLocations.size() - 1);
+                    String timeStamp = listOfTimestamps.get(listOfTimestamps.size() - 1);
                     //send to server
                     new SendPostRequest().execute(userId, String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude()), timeStamp);
                     //send to activity
                     Intent intent = new Intent();
                     intent.setAction(Constants.INTENT_ACTION);
                     intent.putExtra(Constants.INTENT_EXTRA, location);
-                    while(listOfDistances.size() == 0){
+                    while (listOfDistances.size() == 0) {
                         //wait for the asyn function
                     }
                     Double distance = listOfDistances.get(listOfDistances.size()-1);
-                    intent.putExtra("distance", distance);
+                    if(distance != -1.0) {
+                        intent.putExtra("distance", distance);
+                    }
                     if(!tracking.equals("")){
                         intent.putExtra("tracking", "stop");
                         LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getApplicationContext());
@@ -211,6 +213,7 @@ public class LocationService extends Service
         protected void onPreExecute(){}
 
         protected String doInBackground(String... params) {
+            HttpURLConnection conn = null;
 
             try {
                 URL url = new URL("https://rider-track-dev.herokuapp.com/api/events/"+eventId+"/participants/positions"); // here is your URL path
@@ -221,7 +224,7 @@ public class LocationService extends Service
                 postDataParams.put("timestamp", params[3]);
                 Log.e("params",postDataParams.toString());
 
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn = (HttpURLConnection) url.openConnection();
                 conn.setReadTimeout(15000 /* milliseconds */);
                 conn.setConnectTimeout(15000 /* milliseconds */);
                 conn.setRequestProperty("Authorization", "JWT " + token);
@@ -241,7 +244,6 @@ public class LocationService extends Service
                 int responseCode=conn.getResponseCode();
 
                 if (responseCode == HttpsURLConnection.HTTP_OK) {
-
                     BufferedReader in=new BufferedReader(new
                             InputStreamReader(
                             conn.getInputStream()));
@@ -260,25 +262,10 @@ public class LocationService extends Service
                     getDistanceToFinishLine(sb);
                     return sb.toString();
 
-                } if (responseCode == HttpsURLConnection.HTTP_BAD_REQUEST){
-                    BufferedReader in=new BufferedReader(new
-                            InputStreamReader(
-                            conn.getErrorStream()));
-
-                    StringBuffer sb = new StringBuffer("");
-                    String line="";
-
-                    while((line = in.readLine()) != null) {
-
-                        sb.append(line);
-                        break;
-                    }
-
-                    in.close();
-                    Log.e("Tracking finished", sb.toString());
-                    tracking = "stop";
-                    Log.e("false", String.valueOf(responseCode) + sb.toString());
-                    return sb.toString();
+                }if(responseCode == HttpsURLConnection.HTTP_BAD_REQUEST){
+                    setStopTracking();
+                    Log.e("Tracking","finished");
+                    return "stop";
                 }
                 else {
                     BufferedReader in=new BufferedReader(new
@@ -302,13 +289,11 @@ public class LocationService extends Service
             }
             catch(Exception e){
                 return new String("Exception: " + e.getMessage());
+            }finally {
+            if (conn != null) {
+                conn.disconnect();
             }
-
         }
-
-        @Override
-        protected void onPostExecute(String result) {
-
         }
     }
 
@@ -339,6 +324,11 @@ public class LocationService extends Service
         JSONObject response = new JSONObject(sb.toString());
         Double distance = response.getDouble("distanceToTheEnd" );
         listOfDistances.add(distance);
+    }
+
+    private void setStopTracking(){
+        listOfDistances.add(-1.0);
+        tracking = "stop";
     }
 
 }
