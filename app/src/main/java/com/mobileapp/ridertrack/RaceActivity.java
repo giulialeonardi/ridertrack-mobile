@@ -328,6 +328,7 @@ public class RaceActivity extends AppCompatActivity {
         SharedPreferences sp = getSharedPreferences("ActualStartingTime", MODE_PRIVATE);
         String ast=sp.getString("ast", "");
         if(ast.equals("")) {
+            startLocationService();
             actualStartingTime = SystemClock.elapsedRealtime();
             SharedPreferences.Editor Ed = sp.edit();
             Ed.putString("ast", String.valueOf(actualStartingTime));
@@ -341,7 +342,6 @@ public class RaceActivity extends AppCompatActivity {
                 time.setBase(actualStartingTime);
                 time.start();
                 startingTime = time.getBase();
-                startLocationService();
             }
         });
     }
