@@ -327,8 +327,8 @@ public class RaceActivity extends AppCompatActivity {
     public void startChronometer() {
         SharedPreferences sp = getSharedPreferences("ActualStartingTime", MODE_PRIVATE);
         String ast=sp.getString("ast", "");
+        Log.e("Race", ast);
         if(ast.equals("")) {
-            startLocationService();
             actualStartingTime = SystemClock.elapsedRealtime();
             SharedPreferences.Editor Ed = sp.edit();
             Ed.putString("ast", String.valueOf(actualStartingTime));
@@ -342,6 +342,7 @@ public class RaceActivity extends AppCompatActivity {
                 time.setBase(actualStartingTime);
                 time.start();
                 startingTime = time.getBase();
+                startLocationService();
             }
         });
     }
@@ -566,7 +567,6 @@ public class RaceActivity extends AppCompatActivity {
                          */
                         recursiveCheck();
                         Log.e(TAG, "RecursiveCheck called ");
-
                     }
                     return true;
                 }else{
