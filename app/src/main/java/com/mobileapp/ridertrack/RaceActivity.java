@@ -103,10 +103,12 @@ public class RaceActivity extends AppCompatActivity {
     private BroadcastReceiver receiver;
     private LocalBroadcastManager lbm;
     private Intent locationService;
+    private boolean serviceRunning;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.e(TAG, "onCreate");
         /*
          * Preventing the screen sleep
          */
@@ -121,6 +123,7 @@ public class RaceActivity extends AppCompatActivity {
         ImageView share = findViewById(R.id.facebook_sign_in_button);
         time = findViewById(R.id.time);
         locationArrayList = new ArrayList<>();
+        serviceRunning = false;
         /*
          * Retrieving information about current user and selected event
          */
@@ -327,14 +330,25 @@ public class RaceActivity extends AppCompatActivity {
     public void startChronometer() {
         SharedPreferences sp = getSharedPreferences("ActualStartingTime", MODE_PRIVATE);
         String ast=sp.getString("ast", "");
-        Log.e("Race", ast);
+        SharedPreferences sp1 = getSharedPreferences("Counters", MODE_PRIVATE);
+        final String spd = sp1.getString("speed", "0,00");
+        final String distance = sp1.getString("distance", "0,00");
+        Log.e("RACE", "Il valore di ast è "+ast);
         if(ast.equals("")) {
             actualStartingTime = SystemClock.elapsedRealtime();
             SharedPreferences.Editor Ed = sp.edit();
             Ed.putString("ast", String.valueOf(actualStartingTime));
             Ed.commit();
+            startLocationService();
         }else{
             actualStartingTime = Long.valueOf(ast);
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    speed.setText(spd);
+                    finishLine.setText(distance);
+                }
+            });
         }
         runOnUiThread(new Runnable() {
             @Override
@@ -342,7 +356,6 @@ public class RaceActivity extends AppCompatActivity {
                 time.setBase(actualStartingTime);
                 time.start();
                 startingTime = time.getBase();
-                startLocationService();
             }
         });
     }
@@ -365,12 +378,14 @@ public class RaceActivity extends AppCompatActivity {
      */
     private void startLocationService()
     {
+        Log.e(TAG, "START LOCATION SERVICE");
         locationService = new Intent(this, LocationService.class);
         locationService.putExtra("userId", userId);
         locationService.putExtra("token", token);
         locationService.putExtra("eventId", eventId);
         locationService.putExtra("delay", delay);
         startService(locationService);
+        serviceRunning = true;
     }
     /**
      * CalculateSpeed method calculates the average speed at which the user ran the distance passed as param.
@@ -382,6 +397,10 @@ public class RaceActivity extends AppCompatActivity {
         float speed = 3.6f * ((distance*1000)/timeDistance);
         Log.e("Speed: ", String.valueOf(speed));
         this.speed.setText(String.valueOf(round(speed)));
+        SharedPreferences sp = getSharedPreferences("Counters", MODE_PRIVATE);
+        SharedPreferences.Editor Ed = sp.edit();
+        Ed.putString("speed", String.valueOf(round(speed)));
+        Ed.commit();
         startingTime = currentTime;
     }
     /**
@@ -391,6 +410,10 @@ public class RaceActivity extends AppCompatActivity {
      */
     private void setDistanceToFinishLine(Double distanceToFinishLine) throws JSONException {
         final String dist = String.valueOf(round(distanceToFinishLine.floatValue()));
+        SharedPreferences sp = getSharedPreferences("Counters", MODE_PRIVATE);
+        SharedPreferences.Editor Ed = sp.edit();
+        Ed.putString("distance", dist);
+        Ed.commit();
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -551,6 +574,7 @@ public class RaceActivity extends AppCompatActivity {
                      * Starting chronometer if the status of the event is "ongoing"
                      */
                     if(status.equals("ongoing")){
+                        Log.e(TAG, "Recursive check succeeded");
                        startChronometer();
                         runOnUiThread(new Runnable() {
                             @Override
@@ -561,6 +585,13 @@ public class RaceActivity extends AppCompatActivity {
                                 stat.setText(text);
                             }
                         });
+                    }if(status.equals("passed")){
+                        Intent eventsList = new Intent(getApplicationContext(), EventsListActivity.class);
+                        eventsList.putExtra("userId", userId);
+                        eventsList.putExtra("token", token);
+                        eventsList.putExtra("delay", delay);
+                        startActivity(eventsList);
+                        finish();
                     }else{
                         /*
                          * Triggering recursion to wait for the event status to turn into "ongoing"
