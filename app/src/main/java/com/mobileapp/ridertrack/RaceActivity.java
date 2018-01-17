@@ -136,6 +136,7 @@ public class RaceActivity extends AppCompatActivity {
         city = intent.getStringExtra("city");
         type = intent.getStringExtra("type");
         String startTime = intent.getStringExtra("startingTime");
+        String closingTime = intent.getStringExtra("closingTime");
         Log.e(TAG, "Delay: " + delay);
         /*
          * Setting the chronometer
@@ -247,6 +248,11 @@ public class RaceActivity extends AppCompatActivity {
                 Toast.makeText(RaceActivity.this, "Unable to share on Facebook.", Toast.LENGTH_SHORT).show();
             }
         });
+        try {
+            stopEvent(closingTime);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
 
     }
 
@@ -304,6 +310,34 @@ public class RaceActivity extends AppCompatActivity {
                 new CheckIfOngoing().execute();
             }
         }, date);
+    }
+
+    private void stopEvent(String stopTime) throws ParseException {
+        if(!stopTime.equals("")) {
+            SharedPreferences sp = getSharedPreferences("LastEventClosingTime", MODE_PRIVATE);
+            SharedPreferences.Editor Ed = sp.edit();
+            Ed.putString("closingTime", stopTime);
+            Ed.commit();
+         /*
+         * Date and time at which the method must be executed
+         */
+            DateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            Date date = dateFormatter.parse(stopTime);
+
+        /*
+         * Creating the timer
+         */
+            Timer timer = new Timer();
+        /*
+         * To execute method once
+         */
+            timer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    stopTracking();
+                }
+            }, date);
+        }
     }
     /**
      * StopTracking method closes the RaceActivity and redirects the user back to EventsListActivity
@@ -445,7 +479,7 @@ public class RaceActivity extends AppCompatActivity {
                     public void run() {
                         new CheckIfOngoing().execute();
                     }
-                }, 5000);
+                }, 3000);
             }
         });
     }
@@ -461,12 +495,12 @@ public class RaceActivity extends AppCompatActivity {
              */
             ShareOpenGraphObject object = new ShareOpenGraphObject.Builder()
                     .putString("og:type", "fitness.course")
+                    .putString("og:title", "Hey, there! I'm competing")
                     .putString("og:url","https://rider-track-dev.herokuapp.com/events/"+eventId)
                     .putString("og:image", string)
                     .putString("og:description",
                             "Hey, there! I'm competing in "+name+". Track me on Ridertrack.")
                     .putBoolean("og:rich_attachment", true)
-                    .putString("og:title", "Hey, there! I'm competing")
                     .build();
             /*
              * Create an action
@@ -573,9 +607,9 @@ public class RaceActivity extends AppCompatActivity {
                     /*
                      * Starting chronometer if the status of the event is "ongoing"
                      */
-                    if(status.equals("ongoing")){
+                    if(status.equals("ongoing")) {
                         Log.e(TAG, "Recursive check succeeded");
-                       startChronometer();
+                        startChronometer();
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
@@ -585,13 +619,6 @@ public class RaceActivity extends AppCompatActivity {
                                 stat.setText(text);
                             }
                         });
-                    }if(status.equals("passed")){
-                        Intent eventsList = new Intent(getApplicationContext(), EventsListActivity.class);
-                        eventsList.putExtra("userId", userId);
-                        eventsList.putExtra("token", token);
-                        eventsList.putExtra("delay", delay);
-                        startActivity(eventsList);
-                        finish();
                     }else{
                         /*
                          * Triggering recursion to wait for the event status to turn into "ongoing"

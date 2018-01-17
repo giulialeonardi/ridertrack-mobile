@@ -280,6 +280,14 @@ public class EventsListActivity extends AppCompatActivity {
                         String startingTime = jObject.getString("startingTimeString");
                         event.setStartingTime(startingTime);
                     }
+                    if (jObject.has("closingDateString")) {
+                        String closingDate = jObject.getString("closingDateString");
+                        event.setClosingDate(closingDate);
+                    }
+                    if (jObject.has("closingTimeString")) {
+                        String closingTime = jObject.getString("closingTimeString");
+                        event.setClosingTime(closingTime);
+                    }
                     if (jObject.has("maxDuration")) {
                         int maxDuration = jObject.getInt("maxDuration");
                         event.setMaxDuration(maxDuration);
@@ -380,7 +388,7 @@ public class EventsListActivity extends AppCompatActivity {
                     TextView title = event.findViewById(R.id.event_name);
                     title.setText(eventsList.get(i).getName());
                     TextView city = event.findViewById(R.id.location);
-                    city.setText(eventsList.get(i).getCity());
+                    city.setText(splitIfTooLong(eventsList.get(i).getCity()));
                     TextView date = event.findViewById(R.id.date);
                     date.setText(eventsList.get(i).getStartingDate());
                     TextView time = event.findViewById(R.id.time);
@@ -439,6 +447,7 @@ public class EventsListActivity extends AppCompatActivity {
                             raceActivity.putExtra("type", findEventTypeFromID(event.getTag().toString()));
                             raceActivity.putExtra("startingPoint", findEventStartingPointFromID(event.getTag().toString()));
                             raceActivity.putExtra("startingTime", findEventStartingTimeFromID(event.getTag().toString()));
+                            raceActivity.putExtra("closingTime", findEventClosingTimeFromID(event.getTag().toString()));
                             startActivity(raceActivity);
                         }
                     });
@@ -585,6 +594,35 @@ public class EventsListActivity extends AppCompatActivity {
     }
 
     /**
+     * FindEventClosingTimeFromID method returns the closing time of event whose id has been passed as param.
+     *
+     * @param eventId: String variable, containing the id of the event
+     * @return String: event ending time
+     */
+    private String findEventClosingTimeFromID(String eventId) {
+        String time = "";
+        String date = "";
+        String closingTime = "";
+        for (Event event : eventsList) {
+            if (event.getId().equals(eventId)) {
+                if(event.getClosingDate() != null && event.getClosingTime() != null) {
+                    time = event.getClosingTime() + ":00";
+                    String[] splitted = event.getClosingDate().split("/");
+                    String day = splitted[0];
+                    String month = splitted[1];
+                    String year = splitted[2];
+                    date = year + "-" + month + "-" + day;
+                    closingTime = date + " " + time;
+                }
+                else{
+                    closingTime="";
+                }
+            }
+        }
+        return closingTime;
+    }
+
+    /**
      * FindEventCityFromID method returns the city of event whose id has been passed as param.
      *
      * @param eventId: String variable, containing the id of the
@@ -615,6 +653,15 @@ public class EventsListActivity extends AppCompatActivity {
             }
         }
         return type;
+    }
+    private String splitIfTooLong(String string){
+        String newString = "";
+        if (string.length()>15){
+            newString = string.substring(0, 12) + "...";
+        }else{
+            newString = string;
+        }
+        return newString;
     }
     /**
      * Asynchronous methods which handle GET requests to server.

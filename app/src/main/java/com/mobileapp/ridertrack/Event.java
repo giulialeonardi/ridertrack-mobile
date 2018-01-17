@@ -28,6 +28,8 @@ public class Event {
     private String logo;
     private String createdAt;
     private String updatedAt;
+    private String closingDate;
+    private String closingTime;
 
     public Event(){
 
@@ -186,5 +188,20 @@ public class Event {
 
     public void setStartingPoint(String startingPoint) {
         this.startingPoint = startingPoint;
+    }
+
+    public String getClosingDate() {
+        return closingDate;
+    }
+
+    public void setClosingDate(String closingDate) {
+        this.closingDate = closingDate;
+    }
+    public String getClosingTime() {
+        return closingTime;
+    }
+
+    public void setClosingTime(String closingTime) {
+        this.closingTime = closingTime;
     }
 }

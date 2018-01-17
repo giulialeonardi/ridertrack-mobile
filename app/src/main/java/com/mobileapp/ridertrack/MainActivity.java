@@ -8,6 +8,11 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 /**
  * MainActivity is the activity called by the launcher every time Ridertrack application is opened.
  * It displays the "Login" button, which redirects user to LoginActivity.
@@ -19,6 +24,22 @@ public class MainActivity extends AppCompatActivity  {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        SharedPreferences sp = getSharedPreferences("LastEventClosingTime", MODE_PRIVATE);
+        String closingTime = sp.getString("closingTime", null);
+        if(closingTime != null){
+            DateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            try {
+                Date date = dateFormatter.parse(closingTime);
+                if (date.before(new Date())) {
+                    SharedPreferences sp1 = getSharedPreferences("ActualStartingTime", MODE_PRIVATE);
+                    SharedPreferences.Editor Ed = sp1.edit();
+                    Ed.putString("ast", "");
+                    Ed.commit();
+                }
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }
         /*
          * Retrieving information about user
          */
