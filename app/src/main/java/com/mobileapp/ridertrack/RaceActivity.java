@@ -305,6 +305,7 @@ public class RaceActivity extends AppCompatActivity {
          * To execute method once
          */
         timer.schedule(new TimerTask() {
+
             @Override
             public void run() {
                 new CheckIfOngoing().execute();
@@ -488,6 +489,13 @@ public class RaceActivity extends AppCompatActivity {
      * @param string: String variable, containing URL of the image to be shared
      */
     public void shareDialog(String string) {
+        String message = "";
+
+        if(actualStartingTime == 0){
+            message = "Hey, there! I'll compete in "+name+". Track me on Ridertrack.";
+        }else{
+            message = "Hey, there! I'm competing in "+name+". Track me on Ridertrack.";
+        }
 
         if (shareDialog.canShow(SharePhotoContent.class)) {
             /*
@@ -495,11 +503,11 @@ public class RaceActivity extends AppCompatActivity {
              */
             ShareOpenGraphObject object = new ShareOpenGraphObject.Builder()
                     .putString("og:type", "fitness.course")
-                    .putString("og:title", "Hey, there! I'm competing")
+                    .putString("og:title", "Ridertrack competition")
                     .putString("og:url","https://rider-track-dev.herokuapp.com/events/"+eventId)
                     .putString("og:image", string)
                     .putString("og:description",
-                            "Hey, there! I'm competing in "+name+". Track me on Ridertrack.")
+                            message)
                     .putBoolean("og:rich_attachment", true)
                     .build();
             /*
